@@ -38,7 +38,12 @@ function AnimatedCounter({ target }: { target: number }) {
     return () => observer.disconnect();
   }, [target]);
 
-  const display = target >= 1000 ? formatNumber(count) : target === 4.9 ? "4.9" : count.toString();
+  const display =
+    target >= 1000
+      ? formatNumber(count)
+      : Number.isInteger(target)
+      ? count.toString()
+      : count.toFixed(1);
   return <span ref={ref}>{display}</span>;
 }
 
@@ -105,7 +110,7 @@ export default function Hero() {
             Explorar recursos
             <ArrowRight size={17} />
           </a>
-          <button className="inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-semibold text-[#e6edf3] bg-[#161b22] border border-[#30363d] rounded-xl hover:border-violet-500/50 hover:bg-[#1c2128] transition-all duration-300">
+          <button type="button" className="inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-semibold text-[#e6edf3] bg-[#161b22] border border-[#30363d] rounded-xl hover:border-violet-500/50 hover:bg-[#1c2128] transition-all duration-300">
             <Play size={15} className="text-violet-400" fill="currentColor" />
             Ver demo
           </button>
