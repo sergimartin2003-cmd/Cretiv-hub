@@ -121,7 +121,7 @@ function RegisterForm() {
   const [showConfirm,   setShowConfirm]   = useState(false);
   const [errors,        setErrors]        = useState<Record<string, string>>({});
   const [loading,       setLoading]       = useState(false);
-  const [success,       setSuccess]       = useState(false);
+  const [registered,    setRegistered]    = useState(false);
 
   // Auto-generate username from name
   useEffect(() => {
@@ -175,13 +175,13 @@ function RegisterForm() {
       return;
     }
 
-    setSuccess(true);
+    setRegistered(true);
     success("¡Bienvenido/a a ContentHub! 🎉", `Cuenta creada como @${result.user.username}`);
     await new Promise((r) => setTimeout(r, 900));
     login(result.user, false);
   }
 
-  if (success) {
+  if (registered) {
     return (
       <div className="flex flex-col items-center justify-center gap-4 py-10">
         <div className="w-16 h-16 rounded-full bg-green-500/15 border border-green-500/30 flex items-center justify-center">
