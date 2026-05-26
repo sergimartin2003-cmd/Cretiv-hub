@@ -255,6 +255,17 @@ export default function Navbar() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  // Listen for search open events from Hero or anywhere
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const term = (e as CustomEvent<string>).detail ?? "";
+      setQuery(term);
+      setSearchOpen(true);
+    };
+    window.addEventListener("ch:open-search", handler);
+    return () => window.removeEventListener("ch:open-search", handler);
+  }, []);
+
   // Close user menu when clicking outside
   useEffect(() => {
     if (!userMenuOpen) return;
