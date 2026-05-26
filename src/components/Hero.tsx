@@ -1,0 +1,226 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { ArrowRight, Star, Users, Package, Sparkles, Play, Search } from "lucide-react";
+import { formatNumber } from "@/lib/utils";
+
+const popularSearches = ["Cinematic LUTs", "Lofi music", "Motion templates", "AI tools", "Lightroom presets"];
+
+const words = ["Vídeo", "Diseño", "Audio", "Motion", "Fotografía", "Contenido"];
+
+const stats = [
+  { label: "Recursos", value: 12000, icon: Package },
+  { label: "Creadores", value: 58000, icon: Users },
+  { label: "Rating", value: 4.9, icon: Star },
+];
+
+function AnimatedCounter({ target }: { target: number }) {
+  const [count, setCount] = useState(0);
+  const ref = useRef<HTMLSpanElement>(null);
+  const started = useRef(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !started.current) {
+          started.current = true;
+          const steps = 60;
+          const increment = target / steps;
+          let current = 0;
+          const timer = setInterval(() => {
+            current += increment;
+            if (current >= target) { setCount(target); clearInterval(timer); }
+            else setCount(Math.floor(current));
+          }, 2000 / steps);
+        }
+      },
+      { threshold: 0.5 }
+    );
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [target]);
+
+  const display =
+    target >= 1000
+      ? formatNumber(count)
+      : Number.isInteger(target)
+      ? count.toString()
+      : count.toFixed(1);
+  return <span ref={ref}>{display}</span>;
+}
+
+export default function Hero() {
+  const [wordIndex, setWordIndex] = useState(0);
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setVisible(false);
+      setTimeout(() => { setWordIndex((i) => (i + 1) % words.length); setVisible(true); }, 300);
+    }, 2500);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden pt-20 pb-12">
+      {/* Backgrounds */}
+      <div className="absolute inset-0 dot-pattern" />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0d1117]" />
+      <div className="orb w-[500px] h-[500px] bg-violet-600 top-0 left-1/2 -translate-x-1/2" />
+      <div className="orb w-[350px] h-[350px] bg-pink-600 top-1/3 right-0 translate-x-1/3" />
+      <div className="orb w-[280px] h-[280px] bg-cyan-600 bottom-1/4 left-0 -translate-x-1/4" />
+
+      {/* Badge */}
+      <div className="relative z-10 mb-8">
+        <div className="flex items-center gap-2 px-4 py-2 glass rounded-full text-sm">
+          <Sparkles size={13} className="text-violet-400" />
+          <span className="text-[#8b949e]">La plataforma #1 para creadores de contenido</span>
+          <span className="px-2 py-0.5 text-[10px] font-bold bg-violet-500/20 text-violet-400 rounded-full tracking-wider">NUEVO</span>
+        </div>
+      </div>
+
+      {/* Headline */}
+      <div className="relative z-10 text-center px-4 max-w-5xl mx-auto">
+        <h1 className="text-5xl md:text-7xl font-black tracking-tight text-white mb-4 leading-[1.08]">
+          El repositorio definitivo
+          <br />
+          <span className="inline-flex items-baseline gap-3 flex-wrap justify-center">
+            <span className="text-[#8b949e] font-black">para</span>
+            <span
+              className={`gradient-text transition-all duration-300 ${
+                visible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2"
+              }`}
+              style={{ display: "inline-block", minWidth: "200px", textAlign: "left" }}
+            >
+              {words[wordIndex]}
+            </span>
+          </span>
+        </h1>
+
+        <p className="text-lg md:text-xl text-[#8b949e] max-w-2xl mx-auto mb-10 leading-relaxed">
+          Miles de recursos premium, templates, herramientas y assets
+          organizados para llevar tu contenido al siguiente nivel.
+        </p>
+
+        {/* ── Hero Search Bar ── */}
+        <div className="w-full max-w-2xl mx-auto mb-6">
+          <button
+            type="button"
+            aria-label="Abrir buscador"
+            onClick={() => window.dispatchEvent(new CustomEvent("ch:open-search"))}
+            className="w-full flex items-center gap-3 px-5 py-4 glass border border-[#30363d] rounded-2xl hover:border-violet-500/50 transition-all duration-300 group shadow-xl text-left"
+          >
+            <div className="w-9 h-9 bg-gradient-to-br from-violet-600/20 to-pink-600/20 border border-violet-500/20 rounded-xl flex items-center justify-center shrink-0 group-hover:from-violet-600/30 group-hover:to-pink-600/30 transition-all duration-300">
+              <Search size={16} className="text-violet-400" />
+            </div>
+            <span className="flex-1 text-[#6e7681] text-base group-hover:text-[#8b949e] transition-colors duration-200">
+              Busca recursos, templates, música, LUTs...
+            </span>
+            <div className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 bg-[#0d1117] rounded-lg border border-[#30363d] text-[11px] text-[#6e7681] font-mono shrink-0">
+              Ctrl K
+            </div>
+          </button>
+
+          {/* Popular tags */}
+          <div className="flex items-center gap-2 mt-3 flex-wrap justify-center">
+            <span className="text-xs text-[#6e7681]">Popular:</span>
+            {popularSearches.map((term) => (
+              <button
+                key={term}
+                type="button"
+                aria-label={`Buscar ${term}`}
+                onClick={() => window.dispatchEvent(new CustomEvent("ch:open-search", { detail: term }))}
+                className="text-xs px-3 py-1 bg-[#161b22] border border-[#30363d] rounded-full text-[#8b949e] hover:text-white hover:border-violet-500/40 hover:bg-[#1c2128] transition-all duration-200"
+              >
+                {term}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* CTAs */}
+        <div className="flex flex-col sm:flex-row gap-3 justify-center mb-16">
+          <a
+            href="#explore"
+            className="btn-gradient inline-flex items-center justify-center gap-2 px-7 py-3.5 text-sm font-bold text-white rounded-xl shadow-[0_0_24px_rgba(124,58,237,0.35)]"
+          >
+            <Sparkles size={15} />
+            Explorar todo
+            <ArrowRight size={15} />
+          </a>
+          <button type="button" className="inline-flex items-center justify-center gap-2 px-7 py-3.5 text-sm font-semibold text-[#e6edf3] bg-[#161b22] border border-[#30363d] rounded-xl hover:border-violet-500/50 hover:bg-[#1c2128] transition-all duration-300">
+            <Play size={14} className="text-violet-400" fill="currentColor" />
+            Ver demo
+          </button>
+        </div>
+
+        {/* Stats */}
+        <div className="flex flex-wrap justify-center gap-8 md:gap-16">
+          {stats.map(({ label, value, icon: Icon }) => (
+            <div key={label} className="text-center">
+              <div className="text-3xl md:text-4xl font-black text-white mb-1 flex items-end justify-center gap-1">
+                <AnimatedCounter target={value} />
+                {value === 4.9 && <span className="text-yellow-400 text-2xl">★</span>}
+                {value >= 1000 && <span className="text-violet-400 text-2xl">+</span>}
+              </div>
+              <div className="text-sm text-[#6e7681] flex items-center justify-center gap-1.5">
+                <Icon size={12} />
+                {label}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Mockup */}
+      <div className="relative z-10 mt-20 max-w-4xl mx-auto px-4 w-full animate-float">
+        <div className="gradient-border">
+          <div className="relative rounded-2xl overflow-hidden bg-[#161b22] shadow-2xl">
+            {/* Browser bar */}
+            <div className="flex items-center gap-3 px-4 py-3 bg-[#1c2128] border-b border-[#30363d]">
+              <div className="flex gap-1.5">
+                <div className="w-3 h-3 rounded-full bg-[#ff5f57]" />
+                <div className="w-3 h-3 rounded-full bg-[#febc2e]" />
+                <div className="w-3 h-3 rounded-full bg-[#28c840]" />
+              </div>
+              <div className="flex-1 flex justify-center">
+                <div className="px-4 py-1 bg-[#0d1117] rounded-md text-xs text-[#6e7681] font-mono">
+                  contenthub.dev/explore
+                </div>
+              </div>
+            </div>
+            {/* Mock grid */}
+            <div className="p-5 grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {[
+                { color: "from-red-500/20 to-orange-500/20", label: "Cinematic LUTs", sub: "1,240 recursos", emoji: "🎞️" },
+                { color: "from-violet-500/20 to-pink-500/20", label: "Motion Graphics", sub: "654 recursos", emoji: "✨" },
+                { color: "from-cyan-500/20 to-blue-500/20", label: "Sound Design", sub: "432 recursos", emoji: "🎵" },
+                { color: "from-green-500/20 to-teal-500/20", label: "AI Tools", sub: "876 recursos", emoji: "🤖" },
+                { color: "from-amber-500/20 to-yellow-500/20", label: "Templates", sub: "2,100 recursos", emoji: "🗂️" },
+                { color: "from-indigo-500/20 to-violet-500/20", label: "Plugins", sub: "478 recursos", emoji: "🔌" },
+              ].map((item) => (
+                <div
+                  key={item.label}
+                  className={`h-20 rounded-xl bg-gradient-to-br ${item.color} border border-white/5 flex flex-col items-center justify-center gap-1.5`}
+                >
+                  <span className="text-2xl">{item.emoji}</span>
+                  <span className="text-[11px] font-semibold text-white/80">{item.label}</span>
+                  <span className="text-[9px] text-white/40">{item.sub}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-2/3 h-16 bg-violet-600/15 blur-3xl rounded-full pointer-events-none" />
+      </div>
+
+      {/* Scroll indicator */}
+      <div className="relative z-10 mt-16 flex flex-col items-center gap-2 text-[#6e7681]">
+        <span className="text-xs tracking-wider">SCROLL</span>
+        <div className="w-5 h-8 border border-[#30363d] rounded-full flex items-start justify-center pt-1.5">
+          <div className="w-1 h-2 bg-violet-500 rounded-full animate-bounce" />
+        </div>
+      </div>
+    </section>
+  );
+}
