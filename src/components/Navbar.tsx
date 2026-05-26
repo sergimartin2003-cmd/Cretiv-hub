@@ -138,7 +138,10 @@ function SearchModal({
                       <button
                         key={r.id}
                         type="button"
-                        onClick={onClose}
+                        onClick={() => {
+                          window.dispatchEvent(new CustomEvent("ch:search", { detail: { resourceId: r.id } }));
+                          onClose();
+                        }}
                         className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/5 transition-all duration-150 group text-left"
                       >
                         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-600/20 to-pink-600/20 border border-violet-500/10 flex items-center justify-center text-base shrink-0">
@@ -159,6 +162,20 @@ function SearchModal({
                       </button>
                     ))}
                   </div>
+                  {/* "Ver todos" footer */}
+                  {query.trim() && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        window.dispatchEvent(new CustomEvent("ch:search", { detail: { query: query.trim() } }));
+                        onClose();
+                      }}
+                      className="mt-3 w-full flex items-center justify-center gap-1.5 py-2.5 text-xs font-semibold text-violet-400 hover:text-violet-300 border border-violet-500/20 hover:border-violet-500/40 rounded-xl hover:bg-violet-600/5 transition-all duration-200"
+                    >
+                      Ver los {results.length} resultados en Explorar
+                      <ArrowRight size={12} />
+                    </button>
+                  )}
                 </>
               ) : (
                 <div className="flex flex-col items-center gap-3 py-8 text-center">
