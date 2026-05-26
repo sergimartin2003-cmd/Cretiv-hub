@@ -65,7 +65,6 @@ export default function Categories() {
         <div
           ref={scrollRef}
           className="flex gap-3 overflow-x-auto scrollbar-hide pb-2"
-          style={{ scrollbarWidth: "none" }}
         >
           {categories.map((cat) => (
             <button

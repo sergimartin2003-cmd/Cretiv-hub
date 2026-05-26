@@ -1,17 +1,20 @@
-import { Zap, GitBranch, MessageCircle, PlayCircle, Camera, Heart } from "lucide-react";
+import { Zap, GitFork, MessageCircle, PlayCircle, Camera, Heart } from "lucide-react";
 
 const footerLinks = {
   Plataforma: ["Explorar", "Colecciones", "Trending", "Herramientas", "API"],
-  Comunidad: ["Discord", "Twitter", "Foro", "Blog", "Newsletter"],
-  Recursos: ["Tutoriales", "Documentación", "Changelog", "Roadmap", "Status"],
-  Legal: ["Términos", "Privacidad", "Cookies", "Licencias", "Contacto"],
+  Comunidad:  ["Discord", "Twitter", "Foro", "Blog", "Newsletter"],
+  Recursos:   ["Tutoriales", "Documentación", "Changelog", "Roadmap", "Status"],
+  Legal:      ["Términos", "Privacidad", "Cookies", "Licencias", "Contacto"],
 };
+
+const currentYear = new Date().getFullYear();
 
 export default function Footer() {
   return (
     <footer className="border-t border-[#30363d] mt-20">
       <div className="max-w-7xl mx-auto px-4 py-16">
         <div className="grid grid-cols-2 md:grid-cols-6 gap-8 mb-12">
+
           {/* Brand */}
           <div className="col-span-2">
             <div className="flex items-center gap-2.5 mb-4">
@@ -19,7 +22,7 @@ export default function Footer() {
                 <Zap size={16} className="text-white" />
               </div>
               <span className="font-bold text-lg text-white">
-                Content<span className="gradient-text-pp">Hub</span>
+                Cretiv<span className="gradient-text-pp">Hub</span>
               </span>
             </div>
             <p className="text-[#6e7681] text-sm leading-relaxed mb-6 max-w-xs">
@@ -28,10 +31,10 @@ export default function Footer() {
             </p>
             <div className="flex gap-3">
               {[
-                { Icon: GitBranch, label: "GitHub" },
-                { Icon: MessageCircle, label: "Twitter" },
-                { Icon: PlayCircle, label: "YouTube" },
-                { Icon: Camera, label: "Instagram" },
+                { Icon: GitFork,       label: "GitHub"    },
+                { Icon: MessageCircle, label: "Twitter"   },
+                { Icon: PlayCircle,    label: "YouTube"   },
+                { Icon: Camera,        label: "Instagram" },
               ].map(({ Icon, label }) => (
                 <a
                   key={label}
@@ -69,7 +72,7 @@ export default function Footer() {
 
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-[#6e7681] text-sm flex items-center gap-1.5">
-            © 2025 ContentHub. Hecho con{" "}
+            © {currentYear} CretivHub. Hecho con{" "}
             <Heart size={12} className="text-pink-500 fill-pink-500" /> para creadores.
           </p>
           <div className="flex items-center gap-4 text-sm text-[#6e7681]">

@@ -15,10 +15,25 @@ const thumbnailGradients: Record<string, string> = {
   audio:     "from-green-600/30 via-emerald-500/20 to-teal-600/30",
   templates: "from-yellow-600/30 via-amber-500/20 to-orange-600/30",
   photo:     "from-cyan-600/30 via-blue-500/20 to-indigo-600/30",
+  fonts:     "from-purple-600/30 via-violet-500/20 to-indigo-600/30",
+  color:     "from-amber-600/30 via-orange-500/20 to-red-600/30",
+  stock:     "from-blue-600/30 via-sky-500/20 to-cyan-600/30",
+  plugins:   "from-violet-600/30 via-purple-500/20 to-fuchsia-600/30",
+  tutorials: "from-emerald-600/30 via-green-500/20 to-teal-600/30",
 };
 
 const thumbnailEmojis: Record<string, string> = {
-  luts: "🎞️", motion: "✨", ai: "🤖", audio: "🎵", templates: "🗂️", photo: "📷",
+  luts:      "🎞️",
+  motion:    "✨",
+  ai:        "🤖",
+  audio:     "🎵",
+  templates: "🗂️",
+  photo:     "📷",
+  fonts:     "🔤",
+  color:     "🎨",
+  stock:     "🖼️",
+  plugins:   "🔌",
+  tutorials: "📚",
 };
 
 function Badge({ type }: { type: "trending" | "new" | "official" }) {

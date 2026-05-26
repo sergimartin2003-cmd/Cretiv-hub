@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { SlidersHorizontal, Grid3x3, List, SearchX, X, Search } from "lucide-react";
 import { resources, Resource } from "@/lib/data";
 import ResourceCard from "./ResourceCard";
@@ -60,8 +60,18 @@ export default function ExploreSection() {
   const [activeSort,    setActiveSort]    = useState("Trending");
   const [view,          setView]          = useState<"grid" | "list">("grid");
   const [page,          setPage]          = useState(1);
-  const [searchText,    setSearchText]    = useState("");
+  const [searchInput,   setSearchInput]   = useState("");   // raw input (instant)
+  const [searchText,    setSearchText]    = useState("");   // debounced (filtered)
   const [highlightId,   setHighlightId]   = useState<string | null>(null);
+
+  // Debounce search — wait 300 ms after user stops typing
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchText(searchInput);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   // Map resource id → DOM ref for scrolling
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -104,6 +114,7 @@ export default function ExploreSection() {
 
       } else if (query !== undefined) {
         // Text search
+        setSearchInput(query);
         setSearchText(query);
         setActiveFilter("Todos");
         setPage(1);
@@ -132,10 +143,11 @@ export default function ExploreSection() {
     setPage(1);
   }
 
-  function clearSearch() {
+  const clearSearch = useCallback(() => {
+    setSearchInput("");
     setSearchText("");
     setPage(1);
-  }
+  }, []);
 
   // ── Subtitle text ───────────────────────────────────────────────────────────
   const subtitle = searchText
@@ -195,8 +207,8 @@ export default function ExploreSection() {
           <Search size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6e7681] pointer-events-none" />
           <input
             type="text"
-            value={searchText}
-            onChange={(e) => { setSearchText(e.target.value); setPage(1); }}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Busca dentro de los recursos..."
             aria-label="Buscar recursos"
             className="w-full bg-[#161b22] border border-[#30363d] rounded-xl pl-10 pr-10 py-2.5 text-sm text-white placeholder-[#6e7681] outline-none focus:border-violet-500/50 transition-colors"
