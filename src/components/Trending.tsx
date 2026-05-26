@@ -6,36 +6,39 @@ import { trending } from "@/lib/data";
 import { formatNumber } from "@/lib/utils";
 import { useToast } from "@/context/ToastContext";
 
-// ─── Newsletter widget ────────────────────────────────────────────────────────
+// ─── Newsletter ───────────────────────────────────────────────────────────────
 
 function Newsletter() {
-  const [email,    setEmail]    = useState("");
-  const [loading,  setLoading]  = useState(false);
-  const [done,     setDone]     = useState(false);
-  const [error,    setError]    = useState("");
+  const [email,   setEmail]   = useState("");
+  const [loading, setLoading] = useState(false);
+  const [done,    setDone]    = useState(false);
+  const [error,   setError]   = useState("");
   const { success, error: toastError } = useToast();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const trimmed = email.trim();
-    if (!trimmed.includes("@") || !trimmed.includes(".")) {
+    const trimmed = email.trim().toLowerCase();
+
+    // Proper email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    if (!emailRegex.test(trimmed)) {
       setError("Introduce un email válido");
       return;
     }
+
     setError("");
     setLoading(true);
     await new Promise((r) => setTimeout(r, 800));
     setLoading(false);
 
-    // Check for duplicate (simple localStorage approach)
-    const key = "ch_newsletter";
+    const key  = "ch_newsletter";
     const subs: string[] = JSON.parse(localStorage.getItem(key) ?? "[]");
-    if (subs.includes(trimmed.toLowerCase())) {
+    if (subs.includes(trimmed)) {
       setError("Este email ya está suscrito");
       toastError("Ya estás suscrito", `${trimmed} ya recibe el newsletter`);
       return;
     }
-    localStorage.setItem(key, JSON.stringify([...subs, trimmed.toLowerCase()]));
+    localStorage.setItem(key, JSON.stringify([...subs, trimmed]));
     setDone(true);
     success("¡Suscripción confirmada! 💌", "Recibirás los mejores recursos cada semana");
   }
@@ -71,19 +74,44 @@ function Newsletter() {
         disabled={loading}
         className="w-full btn-gradient py-2.5 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2 disabled:opacity-60"
       >
-        {loading ? <><Loader2 size={14} className="animate-spin" /> Suscribiendo...</> : "Suscribirme gratis"}
+        {loading
+          ? <><Loader2 size={14} className="animate-spin" /> Suscribiendo...</>
+          : "Suscribirme gratis"
+        }
       </button>
     </form>
   );
 }
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
 const catTagClass: Record<string, string> = {
-  LUTs: "tag-luts", Audio: "tag-audio", Templates: "tag-templates", "AI Tools": "tag-ai",
+  LUTs:       "tag-luts",
+  Audio:      "tag-audio",
+  Templates:  "tag-templates",
+  "AI Tools": "tag-ai",
+  "IA":       "tag-ai",
+  Tutoriales: "tag-tutorials",
 };
 
 const catEmoji: Record<string, string> = {
-  LUTs: "🎞️", Audio: "🎵", Templates: "🗂️", "AI Tools": "🤖",
+  LUTs:       "🎞️",
+  Audio:      "🎵",
+  Templates:  "🗂️",
+  "AI Tools": "🤖",
+  IA:         "🤖",
+  Tutoriales: "📚",
 };
+
+function scrollToExplore(query?: string) {
+  if (query) {
+    window.dispatchEvent(new CustomEvent("ch:search", { detail: { query } }));
+  }
+  const el = document.getElementById("explore");
+  if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 80, behavior: "smooth" });
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export default function Trending() {
   return (
@@ -91,7 +119,7 @@ export default function Trending() {
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-          {/* Trending list */}
+          {/* ── Trending list ── */}
           <div className="lg:col-span-2">
             <div className="flex items-center justify-between mb-6">
               <div>
@@ -100,12 +128,13 @@ export default function Trending() {
                 </h2>
                 <p className="text-[#8b949e] text-sm">Los más descargados ahora mismo</p>
               </div>
-              <a
-                href="#"
+              <button
+                type="button"
+                onClick={() => scrollToExplore()}
                 className="hidden md:flex items-center gap-1.5 text-sm text-violet-400 hover:text-violet-300 transition-colors font-medium"
               >
                 Ver ranking <ArrowRight size={14} />
-              </a>
+              </button>
             </div>
 
             <ol className="space-y-3">
@@ -114,6 +143,7 @@ export default function Trending() {
                   <button
                     type="button"
                     aria-label={`#${item.pos} ${item.title} — ${item.category}`}
+                    onClick={() => scrollToExplore(item.title)}
                     className="card-glow w-full flex items-center gap-4 p-4 bg-[#161b22] border border-[#30363d] rounded-xl cursor-pointer group text-left"
                   >
                     {/* Position */}
@@ -126,7 +156,7 @@ export default function Trending() {
                     {/* Change */}
                     <div className="shrink-0 w-4" aria-hidden="true">
                       {item.change === "up"   && <TrendingUp   size={14} className="text-green-400" />}
-                      {item.change === "down" && <TrendingDown  size={14} className="text-red-400" />}
+                      {item.change === "down" && <TrendingDown  size={14} className="text-red-400"   />}
                       {item.change === "same" && <Minus         size={14} className="text-[#6e7681]" />}
                     </div>
 
@@ -165,8 +195,9 @@ export default function Trending() {
             </ol>
           </div>
 
-          {/* Sidebar */}
+          {/* ── Sidebar ── */}
           <div className="space-y-5">
+
             {/* Stats */}
             <div className="glass rounded-2xl p-5">
               <h3 className="text-white font-bold mb-4 text-xs uppercase tracking-widest text-[#8b949e]">
@@ -174,10 +205,10 @@ export default function Trending() {
               </h3>
               <dl className="space-y-3">
                 {[
-                  { label: "Recursos subidos hoy", value: "+148",   color: "text-green-400" },
-                  { label: "Descargas esta semana", value: "892K",   color: "text-violet-400" },
-                  { label: "Nuevos creadores",      value: "+2,140", color: "text-cyan-400" },
-                  { label: "Colecciones activas",   value: "1,892",  color: "text-pink-400" },
+                  { label: "Recursos subidos hoy",  value: "+148",   color: "text-green-400"  },
+                  { label: "Descargas esta semana",  value: "892K",   color: "text-violet-400" },
+                  { label: "Nuevos creadores",        value: "+2,140", color: "text-cyan-400"   },
+                  { label: "Colecciones activas",     value: "1,892",  color: "text-pink-400"   },
                 ].map((s) => (
                   <div key={s.label} className="flex items-center justify-between gap-4">
                     <dt className="text-sm text-[#8b949e] leading-tight">{s.label}</dt>
@@ -209,23 +240,26 @@ export default function Trending() {
               </h3>
               <ol className="space-y-3">
                 {[
-                  { name: "VisualCraft",  uploads: 142, avatar: "VC" },
-                  { name: "AudioVault",   uploads: 98,  avatar: "AV" },
-                  { name: "AIStudio",     uploads: 87,  avatar: "AI" },
-                  { name: "ThumbnailPro", uploads: 76,  avatar: "TP" },
+                  { name: "VisualCraft",  uploads: 142, avatar: "VC", tag: "LUTs"       },
+                  { name: "AudioVault",   uploads: 98,  avatar: "AV", tag: "Audio"      },
+                  { name: "AIStudio",     uploads: 87,  avatar: "AI", tag: "IA"         },
+                  { name: "ThumbnailPro", uploads: 76,  avatar: "TP", tag: "Templates"  },
                 ].map((user, i) => (
-                  <li key={user.name} className="flex items-center gap-3">
-                    <span className="text-xs font-bold text-[#6e7681] w-4 shrink-0" aria-hidden="true">{i + 1}</span>
-                    <div
-                      aria-hidden="true"
-                      className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-600 to-pink-600 flex items-center justify-center text-xs font-bold text-white shrink-0"
+                  <li key={user.name}>
+                    <button
+                      type="button"
+                      onClick={() => scrollToExplore(user.name)}
+                      className="w-full flex items-center gap-3 group hover:opacity-80 transition-opacity text-left"
                     >
-                      {user.avatar}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm text-white font-medium truncate">{user.name}</div>
-                      <div className="text-xs text-[#6e7681]">{user.uploads} uploads</div>
-                    </div>
+                      <span className="text-xs font-bold text-[#6e7681] w-4 shrink-0">{i + 1}</span>
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-600 to-pink-600 flex items-center justify-center text-xs font-bold text-white shrink-0">
+                        {user.avatar}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm text-white font-medium truncate group-hover:text-violet-300 transition-colors">{user.name}</div>
+                        <div className="text-xs text-[#6e7681]">{user.uploads} uploads</div>
+                      </div>
+                    </button>
                   </li>
                 ))}
               </ol>

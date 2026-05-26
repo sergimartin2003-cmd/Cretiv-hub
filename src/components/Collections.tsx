@@ -3,12 +3,15 @@
 import { Heart, Package, CheckCircle, ArrowRight } from "lucide-react";
 import { collections } from "@/lib/data";
 import { formatNumber } from "@/lib/utils";
+import { useToast } from "@/context/ToastContext";
 
 const coverGradients: Record<string, string> = {
   youtube:      "from-red-600/50 via-orange-600/30 to-yellow-600/50",
   aftereffects: "from-violet-600/50 via-indigo-600/30 to-blue-600/50",
   podcast:      "from-green-600/50 via-emerald-600/30 to-teal-600/50",
   retro:        "from-pink-600/50 via-rose-600/30 to-purple-600/50",
+  tiktok:       "from-cyan-600/50 via-pink-600/30 to-rose-600/50",
+  branding:     "from-amber-600/50 via-orange-600/30 to-yellow-600/50",
 };
 
 const coverEmojis: Record<string, string> = {
@@ -16,9 +19,18 @@ const coverEmojis: Record<string, string> = {
   aftereffects: "⚡",
   podcast:      "🎙️",
   retro:        "📼",
+  tiktok:       "🎵",
+  branding:     "🎨",
 };
 
+function scrollToCollections() {
+  const el = document.getElementById("collections");
+  if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 80, behavior: "smooth" });
+}
+
 export default function Collections() {
+  const { info } = useToast();
+
   return (
     <section id="collections" className="py-20 px-4">
       <div className="max-w-7xl mx-auto">
@@ -29,30 +41,35 @@ export default function Collections() {
             </h2>
             <p className="text-[#8b949e]">Packs temáticos seleccionados por expertos</p>
           </div>
-          <a
-            href="#"
+          <button
+            type="button"
+            onClick={scrollToCollections}
             className="hidden md:flex items-center gap-1.5 text-sm text-violet-400 hover:text-violet-300 transition-colors duration-200 font-medium"
           >
             Ver todas <ArrowRight size={14} />
-          </a>
+          </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {collections.map((col) => {
             const grad  = coverGradients[col.cover] ?? "from-violet-600/50 via-purple-600/30 to-pink-600/50";
-            const emoji = coverEmojis[col.cover] ?? "📦";
+            const emoji = coverEmojis[col.cover]    ?? "📦";
 
             return (
               <button
                 key={col.id}
                 type="button"
                 aria-label={`Ver colección: ${col.title}`}
+                onClick={() => info(`Colección: ${col.title}`, `${col.resources} recursos por ${col.author}`)}
                 className="card-glow group flex flex-col text-left bg-[#161b22] border border-[#30363d] rounded-2xl overflow-hidden w-full"
               >
                 {/* Cover */}
                 <div className={`relative h-36 bg-gradient-to-br ${grad} flex items-center justify-center`}>
                   <div className="absolute inset-0 dot-pattern opacity-20" />
-                  <span className="text-5xl relative z-10 group-hover:scale-110 transition-transform duration-500" aria-hidden="true">
+                  <span
+                    className="text-5xl relative z-10 group-hover:scale-110 transition-transform duration-500"
+                    aria-hidden="true"
+                  >
                     {emoji}
                   </span>
                   {col.official && (
@@ -62,6 +79,12 @@ export default function Collections() {
                       </span>
                     </div>
                   )}
+                  {/* Hover overlay */}
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-20">
+                    <span className="text-white text-sm font-semibold flex items-center gap-2">
+                      Ver colección <ArrowRight size={14} />
+                    </span>
+                  </div>
                 </div>
 
                 {/* Content */}
