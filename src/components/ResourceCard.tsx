@@ -39,8 +39,10 @@ export default function ResourceCard({ resource }: { resource: Resource }) {
   const handleSave = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setSaved(!saved);
-    setSaveCount((c) => saved ? c - 1 : c + 1);
+    setSaved((prev) => {
+      setSaveCount((c) => (prev ? c - 1 : c + 1));
+      return !prev;
+    });
   };
 
   const grad  = thumbnailGradients[resource.thumbnail] ?? "from-violet-600/30 via-purple-500/20 to-pink-600/30";
@@ -52,7 +54,7 @@ export default function ResourceCard({ resource }: { resource: Resource }) {
       <div className={`relative h-44 bg-gradient-to-br ${grad} flex items-center justify-center overflow-hidden shrink-0`}>
         <div className="absolute inset-0 grid-pattern opacity-20" />
 
-        <span className="text-5xl relative z-10 group-hover:scale-110 transition-transform duration-500 select-none">
+        <span className="text-5xl relative z-10 group-hover:scale-110 transition-transform duration-500 select-none" aria-hidden="true">
           {emoji}
         </span>
 
@@ -68,10 +70,18 @@ export default function ResourceCard({ resource }: { resource: Resource }) {
 
         {/* Hover overlay */}
         <div className="absolute inset-0 bg-black/55 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3 z-10">
-          <button className="p-2.5 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 text-white hover:bg-white/20 transition-colors duration-200">
+          <button
+            type="button"
+            aria-label="Ver detalles del recurso"
+            className="p-2.5 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 text-white hover:bg-white/20 transition-colors duration-200"
+          >
             <ExternalLink size={15} />
           </button>
-          <button className="btn-gradient px-4 py-2 rounded-xl text-white text-sm font-semibold flex items-center gap-1.5">
+          <button
+            type="button"
+            aria-label={`Descargar ${resource.title}`}
+            className="btn-gradient px-4 py-2 rounded-xl text-white text-sm font-semibold flex items-center gap-1.5"
+          >
             <Download size={13} />
             Descargar
           </button>
@@ -101,28 +111,36 @@ export default function ResourceCard({ resource }: { resource: Resource }) {
         <div className="flex items-center justify-between pt-3 border-t border-[#30363d] mt-auto">
           {/* Author */}
           <div className="flex items-center gap-2 min-w-0">
-            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-violet-600 to-pink-600 flex items-center justify-center text-[9px] font-bold text-white shrink-0">
+            <div
+              aria-hidden="true"
+              className="w-6 h-6 rounded-full bg-gradient-to-br from-violet-600 to-pink-600 flex items-center justify-center text-[9px] font-bold text-white shrink-0"
+            >
               {resource.author.avatar}
             </div>
             <span className="text-xs text-[#8b949e] truncate flex items-center gap-1">
               {resource.author.name}
-              {resource.author.verified && <CheckCircle size={10} className="text-violet-400 shrink-0" />}
+              {resource.author.verified && (
+                <CheckCircle size={10} className="text-violet-400 shrink-0" aria-label="Verificado" />
+              )}
             </span>
           </div>
 
           {/* Actions */}
           <div className="flex items-center gap-3 shrink-0">
-            <div className="flex items-center gap-1 text-[#8b949e] text-xs">
-              <Star size={11} className="text-yellow-400 fill-yellow-400" />
+            <div className="flex items-center gap-1 text-[#8b949e] text-xs" aria-label={`Valoración: ${resource.stars}`}>
+              <Star size={11} className="text-yellow-400 fill-yellow-400" aria-hidden="true" />
               {resource.stars}
             </div>
             <button
+              type="button"
               onClick={handleSave}
+              aria-label={saved ? "Quitar de guardados" : "Guardar recurso"}
+              aria-pressed={saved}
               className={`flex items-center gap-1 text-xs transition-colors duration-200 ${
                 saved ? "text-pink-400" : "text-[#8b949e] hover:text-pink-400"
               }`}
             >
-              <Heart size={11} className={saved ? "fill-pink-400" : ""} />
+              <Heart size={11} className={saved ? "fill-pink-400" : ""} aria-hidden="true" />
               {formatNumber(saveCount)}
             </button>
           </div>

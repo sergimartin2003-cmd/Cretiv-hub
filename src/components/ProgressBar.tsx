@@ -12,7 +12,7 @@ export default function ProgressBar() {
       const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
       setWidth(progress);
     };
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 

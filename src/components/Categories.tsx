@@ -31,12 +31,16 @@ export default function Categories() {
           <h2 className="text-xl font-bold text-white">Categorías</h2>
           <div className="flex gap-2">
             <button
+              type="button"
+              aria-label="Desplazar izquierda"
               onClick={() => scroll("left")}
               className="p-2 rounded-lg bg-[#161b22] border border-[#30363d] text-[#8b949e] hover:text-white hover:border-violet-500/40 transition-all duration-200"
             >
               <ChevronLeft size={16} />
             </button>
             <button
+              type="button"
+              aria-label="Desplazar derecha"
               onClick={() => scroll("right")}
               className="p-2 rounded-lg bg-[#161b22] border border-[#30363d] text-[#8b949e] hover:text-white hover:border-violet-500/40 transition-all duration-200"
             >
@@ -53,6 +57,8 @@ export default function Categories() {
           {categories.map((cat) => (
             <button
               key={cat.label}
+              type="button"
+              aria-label={`Categoría ${cat.label} — ${cat.count.toLocaleString()} recursos`}
               className="flex-shrink-0 flex flex-col items-center gap-2 px-5 py-4 bg-[#161b22] border border-[#30363d] rounded-xl hover:border-violet-500/40 hover:bg-[#1c2128] transition-all duration-200 group"
             >
               <span className="text-2xl">{cat.icon}</span>
