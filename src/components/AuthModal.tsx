@@ -176,7 +176,7 @@ function RegisterForm() {
     }
 
     setRegistered(true);
-    success("¡Bienvenido/a a ContentHub! 🎉", `Cuenta creada como @${result.user.username}`);
+    success("¡Bienvenido/a a CretivHub! 🎉", `Cuenta creada como @${result.user.username}`);
     await new Promise((r) => setTimeout(r, 900));
     login(result.user, false);
   }
@@ -188,7 +188,7 @@ function RegisterForm() {
           <CheckCircle size={32} className="text-green-400" />
         </div>
         <p className="text-white font-bold text-lg">¡Cuenta creada!</p>
-        <p className="text-[#8b949e] text-sm text-center">Bienvenido/a a ContentHub 🎉</p>
+        <p className="text-[#8b949e] text-sm text-center">Bienvenido/a a CretivHub 🎉</p>
       </div>
     );
   }
@@ -503,7 +503,7 @@ export default function AuthModal() {
               <Zap size={15} className="text-white" />
             </div>
             <span className="font-black text-white">
-              Content<span className="gradient-text-pp">Hub</span>
+              Cretiv<span className="gradient-text-pp">Hub</span>
             </span>
           </div>
           <button
