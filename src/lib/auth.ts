@@ -171,6 +171,33 @@ export function clearSession() {
   sessionStorage.removeItem(SESSION_KEY);
 }
 
+// ─── Saved resources ──────────────────────────────────────────────────────────
+
+export function getSavedResources(userId: string): string[] {
+  const user = getUsers().find((u) => u.id === userId);
+  return user?.savedResources ?? [];
+}
+
+export function isResourceSaved(userId: string, resourceId: string): boolean {
+  return getSavedResources(userId).includes(resourceId);
+}
+
+export function toggleSavedResource(userId: string, resourceId: string): boolean {
+  const users = getUsers();
+  const idx   = users.findIndex((u) => u.id === userId);
+  if (idx === -1) return false;
+
+  const saved = users[idx].savedResources;
+  const isSaved = saved.includes(resourceId);
+
+  users[idx].savedResources = isSaved
+    ? saved.filter((id) => id !== resourceId)
+    : [...saved, resourceId];
+
+  localStorage.setItem("ch_users", JSON.stringify(users));
+  return !isSaved; // returns new state
+}
+
 // ─── Password strength ────────────────────────────────────────────────────────
 
 export type PasswordStrength = 0 | 1 | 2 | 3 | 4;

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
+import { ToastProvider } from "@/context/ToastContext";
 import AuthModal from "@/components/AuthModal";
 
 export const metadata: Metadata = {
@@ -20,10 +21,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="antialiased">
-        <AuthProvider>
-          {children}
-          <AuthModal />
-        </AuthProvider>
+        <ToastProvider>
+          <AuthProvider>
+            {children}
+            <AuthModal />
+          </AuthProvider>
+        </ToastProvider>
       </body>
     </html>
   );

@@ -5,6 +5,7 @@ import {
   X, Eye, EyeOff, Zap, CheckCircle, AlertCircle, Loader2, User as UserIcon, AtSign, Mail, Lock,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/context/ToastContext";
 import {
   register,
   login as authLogin,
@@ -106,6 +107,7 @@ function StrengthBar({ password }: { password: string }) {
 
 function RegisterForm() {
   const { login, setAuthTab } = useAuth();
+  const { success, error: toastError } = useToast();
   const uid = useId();
 
   const [name,          setName]          = useState("");
@@ -162,18 +164,20 @@ function RegisterForm() {
 
     if (!result.ok) {
       const map: Record<string, { field: string; msg: string }> = {
-        email_taken:       { field: "email",    msg: "Este email ya está registrado" },
-        username_taken:    { field: "username", msg: "Este username ya está en uso" },
-        passwords_mismatch:{ field: "confirmPwd",msg: "Las contraseñas no coinciden" },
-        weak_password:     { field: "password", msg: "La contraseña es demasiado débil" },
+        email_taken:        { field: "email",      msg: "Este email ya está registrado" },
+        username_taken:     { field: "username",   msg: "Este username ya está en uso" },
+        passwords_mismatch: { field: "confirmPwd", msg: "Las contraseñas no coinciden" },
+        weak_password:      { field: "password",   msg: "La contraseña es demasiado débil" },
       };
       const { field, msg } = map[result.error] ?? { field: "name", msg: "Error desconocido" };
       setErrors({ [field]: msg });
+      toastError("No se pudo crear la cuenta", msg);
       return;
     }
 
     setSuccess(true);
-    await new Promise((r) => setTimeout(r, 1000));
+    success("¡Bienvenido/a a ContentHub! 🎉", `Cuenta creada como @${result.user.username}`);
+    await new Promise((r) => setTimeout(r, 900));
     login(result.user, false);
   }
 
@@ -341,6 +345,7 @@ function RegisterForm() {
 
 function LoginForm() {
   const { login, setAuthTab } = useAuth();
+  const { success, error: toastError } = useToast();
   const uid = useId();
 
   const [email,      setEmail]      = useState("");
@@ -359,13 +364,15 @@ function LoginForm() {
     const result = authLogin(email, password);
     setLoading(false);
     if (!result.ok) {
-      setError(
+      const msg =
         result.error === "user_not_found"
           ? "No existe ninguna cuenta con ese email"
-          : "Contraseña incorrecta"
-      );
+          : "Contraseña incorrecta";
+      setError(msg);
+      toastError("Error al iniciar sesión", msg);
       return;
     }
+    success(`¡Hola de nuevo, ${result.user.name.split(" ")[0]}! 👋`);
     login(result.user, rememberMe);
   }
 

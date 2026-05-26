@@ -1,9 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, Bell, Menu, X, Zap, Command, LogOut, ChevronDown } from "lucide-react";
+import { Search, Bell, Menu, X, Zap, Command, LogOut, ChevronDown, ArrowRight } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/context/ToastContext";
 import { creatorTypeLabels } from "@/lib/auth";
+import { resources } from "@/lib/data";
+import { formatNumber } from "@/lib/utils";
 
 const navLinks = [
   { label: "Explorar",    href: "#explore" },
@@ -19,8 +22,191 @@ const quickSearches = [
   "Thumbnail templates",
 ];
 
+const filterChips = ["Video", "Audio", "Templates", "IA", "Gratis", "Plugins"];
+
+const filterMap: Record<string, string[]> = {
+  Video:     ["video", "luts", "cinematic", "motion"],
+  Audio:     ["audio", "music", "sfx"],
+  Templates: ["templates", "youtube", "social"],
+  IA:        ["ai", "automation"],
+  Gratis:    [],   // handled by type
+  Plugins:   [],
+};
+
+// ─── Search Modal ────────────────────────────────────────────────────────────
+
+function SearchModal({
+  query, setQuery, onClose,
+}: {
+  query: string;
+  setQuery: (q: string) => void;
+  onClose: () => void;
+}) {
+  const [activeChip, setActiveChip] = useState<string | null>(null);
+
+  const results = resources.filter((r) => {
+    const q = query.toLowerCase().trim();
+    const matchesQuery =
+      !q ||
+      r.title.toLowerCase().includes(q) ||
+      r.description.toLowerCase().includes(q) ||
+      r.tags.some((t) => t.toLowerCase().includes(q)) ||
+      r.category.toLowerCase().includes(q);
+
+    const matchesChip = !activeChip || (() => {
+      if (activeChip === "Gratis")  return r.type === "free";
+      if (activeChip === "Plugins") return r.category === "plugins";
+      const keys = filterMap[activeChip] ?? [];
+      return r.tags.some((t) => keys.includes(t)) || keys.includes(r.category);
+    })();
+
+    return matchesQuery && matchesChip;
+  }).slice(0, 6);
+
+  const showResults = query.trim().length > 0 || activeChip !== null;
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Buscar recursos"
+      className="fixed inset-0 z-[60] flex items-start justify-center pt-16 px-4"
+      onClick={onClose}
+    >
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <div
+        className="relative w-full max-w-xl glass rounded-2xl shadow-2xl overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Input */}
+        <div className="flex items-center gap-3 px-4 py-3.5 border-b border-[#30363d]">
+          <Search size={16} className="text-[#6e7681] shrink-0" />
+          <input
+            autoFocus
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Buscar recursos, herramientas, templates..."
+            aria-label="Buscar"
+            className="flex-1 bg-transparent text-white placeholder-[#6e7681] text-sm outline-none"
+          />
+          {query && (
+            <button
+              type="button"
+              onClick={() => setQuery("")}
+              aria-label="Limpiar búsqueda"
+              className="text-[#6e7681] hover:text-white transition-colors"
+            >
+              <X size={14} />
+            </button>
+          )}
+          <kbd className="px-1.5 py-0.5 text-[10px] text-[#6e7681] bg-[#0d1117] rounded border border-[#30363d] font-mono shrink-0">
+            ESC
+          </kbd>
+        </div>
+
+        {/* Filter chips */}
+        <div className="px-4 py-2.5 flex gap-2 flex-wrap border-b border-[#30363d]/60">
+          {filterChips.map((f) => (
+            <button
+              key={f}
+              type="button"
+              onClick={() => setActiveChip(activeChip === f ? null : f)}
+              className={`px-2.5 py-1 text-xs rounded-full transition-all duration-200 border ${
+                activeChip === f
+                  ? "bg-violet-600/20 text-violet-400 border-violet-500/40"
+                  : "text-[#8b949e] bg-[#1c2128] hover:bg-violet-600/10 hover:text-violet-400 border-[#30363d]"
+              }`}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
+
+        {/* Results or popular */}
+        <div className="max-h-80 overflow-y-auto">
+          {showResults ? (
+            <div className="px-4 py-3">
+              {results.length > 0 ? (
+                <>
+                  <p className="text-xs text-[#6e7681] mb-2 uppercase tracking-wider font-medium">
+                    {results.length} resultado{results.length !== 1 ? "s" : ""}
+                  </p>
+                  <div className="space-y-1">
+                    {results.map((r) => (
+                      <button
+                        key={r.id}
+                        type="button"
+                        onClick={onClose}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/5 transition-all duration-150 group text-left"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-600/20 to-pink-600/20 border border-violet-500/10 flex items-center justify-center text-base shrink-0">
+                          {r.thumbnail === "luts" ? "🎞️" : r.thumbnail === "audio" ? "🎵" : r.thumbnail === "ai" ? "🤖" : r.thumbnail === "motion" ? "✨" : r.thumbnail === "templates" ? "🗂️" : "📷"}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-white font-medium truncate group-hover:text-violet-300 transition-colors">
+                            {r.title}
+                          </p>
+                          <p className="text-xs text-[#6e7681] flex items-center gap-2">
+                            <span className={`tag tag-${r.type === "free" ? "free" : "premium"} py-0`}>
+                              {r.type === "free" ? "Gratis" : "Premium"}
+                            </span>
+                            <span>{formatNumber(r.downloads)} descargas</span>
+                          </p>
+                        </div>
+                        <ArrowRight size={13} className="text-[#30363d] group-hover:text-violet-400 transition-colors shrink-0" />
+                      </button>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="flex flex-col items-center gap-3 py-8 text-center">
+                  <span className="text-3xl">🔍</span>
+                  <p className="text-[#8b949e] text-sm">
+                    Sin resultados para <span className="text-white font-medium">"{query}"</span>
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => { setQuery(""); setActiveChip(null); }}
+                    className="text-xs text-violet-400 hover:underline"
+                  >
+                    Limpiar búsqueda
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="px-4 py-3">
+              <p className="text-xs text-[#6e7681] mb-2 uppercase tracking-wider font-medium">Búsquedas populares</p>
+              <div className="space-y-1">
+                {quickSearches.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setQuery(s)}
+                    className="w-full text-left flex items-center gap-3 px-3 py-2 text-sm text-[#8b949e] hover:text-white hover:bg-white/5 rounded-lg transition-all duration-200"
+                  >
+                    <Search size={12} className="text-[#6e7681]" />
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Navbar() {
-  const { isLoggedIn, session, logout, openAuth } = useAuth();
+  const { isLoggedIn, session, logout: authLogout, openAuth } = useAuth();
+  const { info } = useToast();
+
+  function logout() {
+    authLogout();
+    info("Sesión cerrada", "Hasta pronto 👋");
+  }
 
   const [scrolled,    setScrolled]    = useState(false);
   const [menuOpen,    setMenuOpen]    = useState(false);
@@ -283,61 +469,7 @@ export default function Navbar() {
 
       {/* Search modal */}
       {searchOpen && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label="Buscar recursos"
-          className="fixed inset-0 z-[60] flex items-start justify-center pt-20 px-4"
-          onClick={() => setSearchOpen(false)}
-        >
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-          <div
-            className="relative w-full max-w-xl glass rounded-2xl shadow-2xl overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center gap-3 px-4 py-3.5 border-b border-[#30363d]">
-              <Search size={16} className="text-[#6e7681] shrink-0" />
-              <input
-                autoFocus
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Buscar recursos, herramientas, templates..."
-                aria-label="Buscar"
-                className="flex-1 bg-transparent text-white placeholder-[#6e7681] text-sm outline-none"
-              />
-              <kbd className="px-1.5 py-0.5 text-[10px] text-[#6e7681] bg-[#0d1117] rounded border border-[#30363d] font-mono shrink-0">
-                ESC
-              </kbd>
-            </div>
-            <div className="px-4 py-3 flex gap-2 flex-wrap border-b border-[#30363d]/60">
-              {["Video", "Audio", "Templates", "AI", "Gratis", "Plugins"].map((f) => (
-                <button
-                  key={f}
-                  type="button"
-                  className="px-2.5 py-1 text-xs text-[#8b949e] bg-[#1c2128] rounded-full hover:bg-violet-600/20 hover:text-violet-400 transition-all duration-200 border border-[#30363d]"
-                >
-                  {f}
-                </button>
-              ))}
-            </div>
-            <div className="px-4 py-3">
-              <p className="text-xs text-[#6e7681] mb-2 uppercase tracking-wider font-medium">Populares</p>
-              <div className="space-y-1">
-                {quickSearches.map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    className="w-full text-left flex items-center gap-3 px-3 py-2 text-sm text-[#8b949e] hover:text-white hover:bg-white/5 rounded-lg transition-all duration-200"
-                  >
-                    <Search size={12} className="text-[#6e7681]" />
-                    {s}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
+        <SearchModal query={query} setQuery={setQuery} onClose={() => setSearchOpen(false)} />
       )}
     </>
   );

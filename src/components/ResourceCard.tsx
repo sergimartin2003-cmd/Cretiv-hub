@@ -1,9 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Star, Download, Heart, ExternalLink, CheckCircle, Flame, Sparkles } from "lucide-react";
 import { Resource } from "@/lib/data";
 import { formatNumber } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/context/ToastContext";
+import { isResourceSaved, toggleSavedResource } from "@/lib/auth";
 
 const thumbnailGradients: Record<string, string> = {
   luts:      "from-orange-600/30 via-red-500/20 to-pink-600/30",
@@ -20,9 +23,9 @@ const thumbnailEmojis: Record<string, string> = {
 
 function Badge({ type }: { type: "trending" | "new" | "official" }) {
   const styles = {
-    trending: { cls: "badge-trending", icon: <Flame size={9} />, label: "Trending" },
-    new:      { cls: "badge-new",      icon: <Sparkles size={9} />, label: "Nuevo" },
-    official: { cls: "badge-official", icon: <CheckCircle size={9} />, label: "Oficial" },
+    trending: { cls: "badge-trending", icon: <Flame size={9} />,        label: "Trending" },
+    new:      { cls: "badge-new",      icon: <Sparkles size={9} />,      label: "Nuevo"    },
+    official: { cls: "badge-official", icon: <CheckCircle size={9} />,   label: "Oficial"  },
   };
   const { cls, icon, label } = styles[type];
   return (
@@ -33,16 +36,55 @@ function Badge({ type }: { type: "trending" | "new" | "official" }) {
 }
 
 export default function ResourceCard({ resource }: { resource: Resource }) {
+  const { isLoggedIn, session, openAuth } = useAuth();
+  const { success, info } = useToast();
+
+  // Optimistic UI: start from localStorage if user is logged in
   const [saved, setSaved] = useState(false);
   const [saveCount, setSaveCount] = useState(resource.saves);
+
+  // Sync saved state when session changes
+  useEffect(() => {
+    if (session) {
+      setSaved(isResourceSaved(session.userId, resource.id));
+    } else {
+      setSaved(false);
+    }
+  }, [session, resource.id]);
 
   const handleSave = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setSaved((prev) => {
-      setSaveCount((c) => (prev ? c - 1 : c + 1));
-      return !prev;
-    });
+
+    if (!isLoggedIn || !session) {
+      openAuth("register");
+      info("Crea una cuenta gratis", "Guarda tus recursos favoritos y accede desde cualquier lugar.");
+      return;
+    }
+
+    const nowSaved = toggleSavedResource(session.userId, resource.id);
+    setSaved(nowSaved);
+    setSaveCount((c) => (nowSaved ? c + 1 : c - 1));
+
+    if (nowSaved) {
+      success("Recurso guardado ❤️", `"${resource.title}" añadido a tus guardados`);
+    } else {
+      info("Recurso eliminado", `"${resource.title}" quitado de guardados`);
+    }
+  };
+
+  const handleDownload = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!isLoggedIn) {
+      openAuth("register");
+      info("Inicia sesión para descargar", "Crea una cuenta gratis para acceder a todos los recursos.");
+      return;
+    }
+
+    // Placeholder — real download would use a URL from DB
+    success("Descarga iniciada ⬇️", resource.title);
   };
 
   const grad  = thumbnailGradients[resource.thumbnail] ?? "from-violet-600/30 via-purple-500/20 to-pink-600/30";
@@ -50,11 +92,15 @@ export default function ResourceCard({ resource }: { resource: Resource }) {
 
   return (
     <div className="card-glow group flex flex-col bg-[#161b22] border border-[#30363d] rounded-2xl overflow-hidden">
+
       {/* Thumbnail */}
       <div className={`relative h-44 bg-gradient-to-br ${grad} flex items-center justify-center overflow-hidden shrink-0`}>
         <div className="absolute inset-0 grid-pattern opacity-20" />
 
-        <span className="text-5xl relative z-10 group-hover:scale-110 transition-transform duration-500 select-none" aria-hidden="true">
+        <span
+          className="text-5xl relative z-10 group-hover:scale-110 transition-transform duration-500 select-none"
+          aria-hidden="true"
+        >
           {emoji}
         </span>
 
@@ -80,6 +126,7 @@ export default function ResourceCard({ resource }: { resource: Resource }) {
           <button
             type="button"
             aria-label={`Descargar ${resource.title}`}
+            onClick={handleDownload}
             className="btn-gradient px-4 py-2 rounded-xl text-white text-sm font-semibold flex items-center gap-1.5"
           >
             <Download size={13} />
@@ -90,6 +137,7 @@ export default function ResourceCard({ resource }: { resource: Resource }) {
 
       {/* Body */}
       <div className="flex flex-col flex-1 p-4 gap-3 min-h-0">
+
         {/* Tags */}
         <div className="flex gap-1.5 flex-wrap">
           {resource.tags.slice(0, 3).map((tag) => (
@@ -109,6 +157,7 @@ export default function ResourceCard({ resource }: { resource: Resource }) {
 
         {/* Footer */}
         <div className="flex items-center justify-between pt-3 border-t border-[#30363d] mt-auto">
+
           {/* Author */}
           <div className="flex items-center gap-2 min-w-0">
             <div
@@ -127,7 +176,10 @@ export default function ResourceCard({ resource }: { resource: Resource }) {
 
           {/* Actions */}
           <div className="flex items-center gap-3 shrink-0">
-            <div className="flex items-center gap-1 text-[#8b949e] text-xs" aria-label={`Valoración: ${resource.stars}`}>
+            <div
+              className="flex items-center gap-1 text-[#8b949e] text-xs"
+              aria-label={`Valoración: ${resource.stars}`}
+            >
               <Star size={11} className="text-yellow-400 fill-yellow-400" aria-hidden="true" />
               {resource.stars}
             </div>
@@ -140,7 +192,11 @@ export default function ResourceCard({ resource }: { resource: Resource }) {
                 saved ? "text-pink-400" : "text-[#8b949e] hover:text-pink-400"
               }`}
             >
-              <Heart size={11} className={saved ? "fill-pink-400" : ""} aria-hidden="true" />
+              <Heart
+                size={11}
+                className={`transition-all duration-200 ${saved ? "fill-pink-400 scale-110" : ""}`}
+                aria-hidden="true"
+              />
               {formatNumber(saveCount)}
             </button>
           </div>
