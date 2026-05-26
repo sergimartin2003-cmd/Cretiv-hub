@@ -7,6 +7,7 @@ import { useToast } from "@/context/ToastContext";
 import { creatorTypeLabels } from "@/lib/auth";
 import { resources } from "@/lib/data";
 import { formatNumber } from "@/lib/utils";
+import UserProfileModal from "@/components/UserProfileModal";
 
 const navLinks = [
   { label: "Explorar",    href: "#explore" },
@@ -208,11 +209,12 @@ export default function Navbar() {
     info("Sesión cerrada", "Hasta pronto 👋");
   }
 
-  const [scrolled,    setScrolled]    = useState(false);
-  const [menuOpen,    setMenuOpen]    = useState(false);
-  const [searchOpen,  setSearchOpen]  = useState(false);
-  const [userMenuOpen,setUserMenuOpen]= useState(false);
-  const [query,       setQuery]       = useState("");
+  const [scrolled,     setScrolled]     = useState(false);
+  const [menuOpen,     setMenuOpen]     = useState(false);
+  const [searchOpen,   setSearchOpen]   = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [profileOpen,  setProfileOpen]  = useState(false);
+  const [query,        setQuery]        = useState("");
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 30);
@@ -367,14 +369,15 @@ export default function Navbar() {
                     {/* Menu items */}
                     <div className="py-1">
                       {[
-                        { label: "Mi perfil",       icon: "👤" },
-                        { label: "Mis guardados",    icon: "❤️" },
-                        { label: "Mis colecciones",  icon: "📁" },
-                        { label: "Configuración",    icon: "⚙️" },
+                        { label: "Mi perfil",      icon: "👤", action: () => { setUserMenuOpen(false); setProfileOpen(true); } },
+                        { label: "Mis guardados",  icon: "❤️", action: () => { setUserMenuOpen(false); setProfileOpen(true); } },
+                        { label: "Mis colecciones",icon: "📁", action: () => {} },
+                        { label: "Configuración",  icon: "⚙️", action: () => {} },
                       ].map((item) => (
                         <button
                           key={item.label}
                           type="button"
+                          onClick={item.action}
                           className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-[#8b949e] hover:text-white hover:bg-white/5 transition-all duration-150 text-left"
                         >
                           <span className="text-base" aria-hidden="true">{item.icon}</span>
@@ -471,6 +474,9 @@ export default function Navbar() {
       {searchOpen && (
         <SearchModal query={query} setQuery={setQuery} onClose={() => setSearchOpen(false)} />
       )}
+
+      {/* Profile modal */}
+      <UserProfileModal open={profileOpen} onClose={() => setProfileOpen(false)} />
     </>
   );
 }

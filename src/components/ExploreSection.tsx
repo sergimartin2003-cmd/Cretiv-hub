@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { SlidersHorizontal, Grid3x3, List, SearchX } from "lucide-react";
 import { resources, Resource } from "@/lib/data";
 import ResourceCard from "./ResourceCard";
@@ -46,6 +46,19 @@ export default function ExploreSection() {
   const [activeSort, setActiveSort]     = useState("Trending");
   const [view, setView]                 = useState<"grid" | "list">("grid");
   const [page, setPage]                 = useState(1);
+
+  // Listen for category clicks from the Categories component
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const filter = (e as CustomEvent<string>).detail;
+      if (filters.includes(filter)) {
+        setActiveFilter(filter);
+        setPage(1);
+      }
+    };
+    window.addEventListener("ch:category-filter", handler);
+    return () => window.removeEventListener("ch:category-filter", handler);
+  }, []);
 
   const filtered = useMemo(
     () => sortResources(filterResources(resources, activeFilter), activeSort),

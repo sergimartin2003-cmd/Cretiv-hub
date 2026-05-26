@@ -1,8 +1,81 @@
 "use client";
 
-import { TrendingUp, TrendingDown, Minus, Star, Download, ArrowRight } from "lucide-react";
+import { useState } from "react";
+import { TrendingUp, TrendingDown, Minus, Star, Download, ArrowRight, Loader2, CheckCircle } from "lucide-react";
 import { trending } from "@/lib/data";
 import { formatNumber } from "@/lib/utils";
+import { useToast } from "@/context/ToastContext";
+
+// ─── Newsletter widget ────────────────────────────────────────────────────────
+
+function Newsletter() {
+  const [email,    setEmail]    = useState("");
+  const [loading,  setLoading]  = useState(false);
+  const [done,     setDone]     = useState(false);
+  const [error,    setError]    = useState("");
+  const { success, error: toastError } = useToast();
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const trimmed = email.trim();
+    if (!trimmed.includes("@") || !trimmed.includes(".")) {
+      setError("Introduce un email válido");
+      return;
+    }
+    setError("");
+    setLoading(true);
+    await new Promise((r) => setTimeout(r, 800));
+    setLoading(false);
+
+    // Check for duplicate (simple localStorage approach)
+    const key = "ch_newsletter";
+    const subs: string[] = JSON.parse(localStorage.getItem(key) ?? "[]");
+    if (subs.includes(trimmed.toLowerCase())) {
+      setError("Este email ya está suscrito");
+      toastError("Ya estás suscrito", `${trimmed} ya recibe el newsletter`);
+      return;
+    }
+    localStorage.setItem(key, JSON.stringify([...subs, trimmed.toLowerCase()]));
+    setDone(true);
+    success("¡Suscripción confirmada! 💌", "Recibirás los mejores recursos cada semana");
+  }
+
+  if (done) {
+    return (
+      <div className="flex flex-col items-center gap-3 py-4 text-center">
+        <div className="w-12 h-12 rounded-full bg-green-500/15 border border-green-500/25 flex items-center justify-center">
+          <CheckCircle size={24} className="text-green-400" />
+        </div>
+        <p className="text-white font-bold text-sm">¡Ya estás suscrito!</p>
+        <p className="text-[#6e7681] text-xs">Revisa tu inbox cada semana 📬</p>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} noValidate>
+      <label htmlFor="newsletter-email" className="sr-only">Tu email</label>
+      <input
+        id="newsletter-email"
+        type="email"
+        value={email}
+        onChange={(e) => { setEmail(e.target.value); setError(""); }}
+        placeholder="tu@email.com"
+        className={`w-full bg-[#0d1117] border rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-[#6e7681] mb-2 outline-none transition-colors ${
+          error ? "border-red-500/50 focus:border-red-500" : "border-[#30363d] focus:border-violet-500/50"
+        }`}
+      />
+      {error && <p className="text-xs text-red-400 mb-2">{error}</p>}
+      <button
+        type="submit"
+        disabled={loading}
+        className="w-full btn-gradient py-2.5 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2 disabled:opacity-60"
+      >
+        {loading ? <><Loader2 size={14} className="animate-spin" /> Suscribiendo...</> : "Suscribirme gratis"}
+      </button>
+    </form>
+  );
+}
 
 const catTagClass: Record<string, string> = {
   LUTs: "tag-luts", Audio: "tag-audio", Templates: "tag-templates", "AI Tools": "tag-ai",
@@ -122,16 +195,7 @@ export default function Trending() {
                 <p className="text-[#8b949e] text-sm mb-4 leading-relaxed">
                   Los mejores recursos de la semana en tu inbox.
                 </p>
-                <label htmlFor="newsletter-email" className="sr-only">Tu email</label>
-                <input
-                  id="newsletter-email"
-                  type="email"
-                  placeholder="tu@email.com"
-                  className="w-full bg-[#0d1117] border border-[#30363d] rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-[#6e7681] mb-3 outline-none focus:border-violet-500/50 transition-colors"
-                />
-                <button type="button" className="w-full btn-gradient py-2.5 rounded-xl text-sm font-bold text-white">
-                  Suscribirme gratis
-                </button>
+                <Newsletter />
                 <p className="text-[10px] text-[#6e7681] mt-2.5 text-center">
                   Sin spam · Baja cuando quieras
                 </p>

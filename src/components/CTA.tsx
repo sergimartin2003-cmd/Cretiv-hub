@@ -1,4 +1,7 @@
+"use client";
+
 import { ArrowRight, Sparkles, CheckCircle } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 const perks = [
   "Sin tarjeta de crédito",
@@ -7,6 +10,8 @@ const perks = [
 ];
 
 export default function CTA() {
+  const { openAuth, isLoggedIn } = useAuth();
+
   return (
     <section className="py-20 px-4">
       <div className="max-w-4xl mx-auto">
@@ -36,13 +41,32 @@ export default function CTA() {
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-                <button type="button" className="btn-gradient inline-flex items-center justify-center gap-2 px-8 py-4 font-bold text-white rounded-xl shadow-[0_0_30px_rgba(124,58,237,0.4)] text-base">
-                  <Sparkles size={17} />
-                  Empezar gratis ahora
-                  <ArrowRight size={17} />
-                </button>
-                <button type="button" className="inline-flex items-center justify-center px-8 py-4 font-semibold text-white bg-[#0d1117] border border-[#30363d] rounded-xl hover:border-violet-500/40 hover:bg-[#1c2128] transition-all duration-300 text-base">
-                  Ver todos los planes
+                {isLoggedIn ? (
+                  <a
+                    href="#explore"
+                    className="btn-gradient inline-flex items-center justify-center gap-2 px-8 py-4 font-bold text-white rounded-xl shadow-[0_0_30px_rgba(124,58,237,0.4)] text-base"
+                  >
+                    <Sparkles size={17} />
+                    Explorar recursos
+                    <ArrowRight size={17} />
+                  </a>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => openAuth("register")}
+                    className="btn-gradient inline-flex items-center justify-center gap-2 px-8 py-4 font-bold text-white rounded-xl shadow-[0_0_30px_rgba(124,58,237,0.4)] text-base"
+                  >
+                    <Sparkles size={17} />
+                    Empezar gratis ahora
+                    <ArrowRight size={17} />
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => openAuth("login")}
+                  className="inline-flex items-center justify-center px-8 py-4 font-semibold text-white bg-[#0d1117] border border-[#30363d] rounded-xl hover:border-violet-500/40 hover:bg-[#1c2128] transition-all duration-300 text-base"
+                >
+                  {isLoggedIn ? "Mi cuenta" : "Ver todos los planes"}
                 </button>
               </div>
 
