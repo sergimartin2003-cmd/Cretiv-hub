@@ -258,6 +258,24 @@ body {
 .animate-shimmer  { animation: shimmer 1.5s infinite; }
 .animate-blink    { animation: blink 1s infinite; }
 
+/* ─── Card enter animation ──────────────────────────── */
+@keyframes cardEnter {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+.card-enter {
+  animation: cardEnter 0.35s ease-out forwards;
+}
+.card-enter-delay-1  { animation-delay: 0.04s;  opacity: 0; }
+.card-enter-delay-2  { animation-delay: 0.08s;  opacity: 0; }
+.card-enter-delay-3  { animation-delay: 0.12s;  opacity: 0; }
+.card-enter-delay-4  { animation-delay: 0.16s;  opacity: 0; }
+.card-enter-delay-5  { animation-delay: 0.20s;  opacity: 0; }
+.card-enter-delay-6  { animation-delay: 0.24s;  opacity: 0; }
+.card-enter-delay-7  { animation-delay: 0.28s;  opacity: 0; }
+.card-enter-delay-8  { animation-delay: 0.32s;  opacity: 0; }
+.card-enter-delay-9  { animation-delay: 0.36s;  opacity: 0; }
+
 /* ─── Typing cursor ─────────────────────────────────── */
 .typing-cursor::after {
   content: '|';

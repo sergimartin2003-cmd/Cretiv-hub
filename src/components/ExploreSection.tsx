@@ -17,7 +17,7 @@ import { useToast } from "@/context/ToastContext";
 const filters = ["Todos", "Video", "Audio", "Foto", "Diseño", "IA", "Templates", "Gratis", "Premium"];
 const sorts   = ["Trending", "Recientes", "Mejor valorados", "Más guardados"];
 
-const ITEMS_PER_PAGE = 6;
+const ITEMS_PER_PAGE = 9;
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -544,12 +544,15 @@ export default function ExploreSection() {
         {/* ── Grid / List ─────────────────────────────────────────────────────── */}
         {filtered.length > 0 && (
           view === "grid" ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {visible.map((resource) => (
+            <div
+              key={`${activeFilter}-${searchText}-${activeSort}`}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
+            >
+              {visible.map((resource, i) => (
                 <div
                   key={resource.id}
                   ref={(el) => { cardRefs.current[resource.id] = el; }}
-                  className={`transition-all duration-500 ${
+                  className={`card-enter ${i < 9 ? `card-enter-delay-${(i % 9) + 1}` : ""} transition-all duration-500 ${
                     highlightId === resource.id
                       ? "ring-2 ring-violet-500 ring-offset-2 ring-offset-[#0d1117] rounded-2xl scale-[1.02]"
                       : ""
@@ -560,12 +563,15 @@ export default function ExploreSection() {
               ))}
             </div>
           ) : (
-            <div className="flex flex-col gap-3">
-              {visible.map((resource) => (
+            <div
+              key={`list-${activeFilter}-${searchText}-${activeSort}`}
+              className="flex flex-col gap-3"
+            >
+              {visible.map((resource, i) => (
                 <div
                   key={resource.id}
                   ref={(el) => { cardRefs.current[resource.id] = el; }}
-                  className={`transition-all duration-500 ${
+                  className={`card-enter ${i < 9 ? `card-enter-delay-${(i % 9) + 1}` : ""} transition-all duration-500 ${
                     highlightId === resource.id
                       ? "ring-2 ring-violet-500 ring-offset-2 ring-offset-[#0d1117] rounded-xl scale-[1.01]"
                       : ""
