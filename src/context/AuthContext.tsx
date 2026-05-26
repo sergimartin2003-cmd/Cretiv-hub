@@ -19,16 +19,17 @@ import {
 // ─── Context type ─────────────────────────────────────────────────────────────
 
 interface AuthContextValue {
-  session:       Session | null;
-  isLoggedIn:    boolean;
-  login:         (user: User, rememberMe: boolean) => void;
-  logout:        () => void;
+  session:        Session | null;
+  isLoggedIn:     boolean;
+  login:          (user: User, rememberMe: boolean) => void;
+  logout:         () => void;
+  refreshSession: (user: User) => void;
   /** Open the auth modal from anywhere */
-  openAuth:      (tab?: "login" | "register") => void;
-  closeAuth:     () => void;
-  authOpen:      boolean;
-  authTab:       "login" | "register";
-  setAuthTab:    (tab: "login" | "register") => void;
+  openAuth:       (tab?: "login" | "register") => void;
+  closeAuth:      () => void;
+  authOpen:       boolean;
+  authTab:        "login" | "register";
+  setAuthTab:     (tab: "login" | "register") => void;
 }
 
 // ─── Context ──────────────────────────────────────────────────────────────────
@@ -64,6 +65,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession(null);
   }, []);
 
+  // Update session in-place after profile edit without logging out
+  const refreshSession = useCallback((user: User) => {
+    const current = loadSession();
+    if (!current) return;
+    saveSession(user, current.rememberMe);
+    setSession(loadSession());
+  }, []);
+
   const openAuth = useCallback((tab: "login" | "register" = "register") => {
     setAuthTab(tab);
     setAuthOpen(true);
@@ -78,6 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoggedIn: !!session,
         login,
         logout,
+        refreshSession,
         openAuth,
         closeAuth,
         authOpen,

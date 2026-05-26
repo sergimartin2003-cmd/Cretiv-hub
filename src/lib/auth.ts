@@ -19,6 +19,7 @@ export interface User {
   avatar: string; // initials
   createdAt: string;
   savedResources: string[];
+  downloadCount: number;
 }
 
 export interface Session {
@@ -29,6 +30,7 @@ export interface Session {
   avatar: string;
   creatorType: CreatorType;
   rememberMe: boolean;
+  createdAt: string;
 }
 
 // ─── Storage keys ──────────────────────────────────────────────────────────────
@@ -115,6 +117,7 @@ export function register(
       .toUpperCase(),
     createdAt: new Date().toISOString(),
     savedResources: [],
+    downloadCount: 0,
   };
 
   saveUsers([...getUsers(), user]);
@@ -147,11 +150,17 @@ export function saveSession(user: User, rememberMe: boolean) {
     avatar:      user.avatar,
     creatorType: user.creatorType,
     rememberMe,
+    createdAt:   user.createdAt,
   };
-  const storage = rememberMe ? localStorage : sessionStorage;
-  storage.setItem(SESSION_KEY, JSON.stringify(session));
-  // Also store in the other to be safe
-  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  const json = JSON.stringify(session);
+  // rememberMe → persist across browser closes; otherwise session-only
+  if (rememberMe) {
+    localStorage.setItem(SESSION_KEY, json);
+    sessionStorage.removeItem(SESSION_KEY);
+  } else {
+    sessionStorage.setItem(SESSION_KEY, json);
+    localStorage.removeItem(SESSION_KEY);
+  }
 }
 
 export function loadSession(): Session | null {
@@ -194,8 +203,23 @@ export function toggleSavedResource(userId: string, resourceId: string): boolean
     ? saved.filter((id) => id !== resourceId)
     : [...saved, resourceId];
 
-  localStorage.setItem("ch_users", JSON.stringify(users));
-  return !isSaved; // returns new state
+  saveUsers(users);
+  return !isSaved;
+}
+
+// ─── Download tracking ────────────────────────────────────────────────────────
+
+export function trackDownload(userId: string): void {
+  const users = getUsers();
+  const idx   = users.findIndex((u) => u.id === userId);
+  if (idx === -1) return;
+  users[idx].downloadCount = (users[idx].downloadCount ?? 0) + 1;
+  saveUsers(users);
+}
+
+export function getDownloadCount(userId: string): number {
+  const user = getUsers().find((u) => u.id === userId);
+  return user?.downloadCount ?? 0;
 }
 
 // ─── Password strength ────────────────────────────────────────────────────────

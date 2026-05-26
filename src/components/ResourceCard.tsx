@@ -6,7 +6,7 @@ import { Resource } from "@/lib/data";
 import { formatNumber } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
-import { isResourceSaved, toggleSavedResource } from "@/lib/auth";
+import { isResourceSaved, toggleSavedResource, trackDownload } from "@/lib/auth";
 
 const thumbnailGradients: Record<string, string> = {
   luts:      "from-orange-600/30 via-red-500/20 to-pink-600/30",
@@ -98,7 +98,7 @@ export default function ResourceCard({ resource }: { resource: Resource }) {
       return;
     }
 
-    // Placeholder — real download would use a URL from DB
+    if (session) trackDownload(session.userId);
     success("Descarga iniciada ⬇️", resource.title);
   };
 

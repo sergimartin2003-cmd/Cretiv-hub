@@ -10,10 +10,10 @@ import { formatNumber } from "@/lib/utils";
 import UserProfileModal from "@/components/UserProfileModal";
 
 const navLinks = [
-  { label: "Explorar",    href: "#explore" },
+  { label: "Explorar",    href: "#explore"     },
   { label: "Colecciones", href: "#collections" },
-  { label: "Trending",    href: "#trending" },
-  { label: "Comunidad",   href: "#" },
+  { label: "Trending",    href: "#trending"    },
+  { label: "Comunidad",   href: "#"            },
 ];
 
 const quickSearches = [
@@ -30,8 +30,22 @@ const filterMap: Record<string, string[]> = {
   Audio:     ["audio", "music", "sfx"],
   Templates: ["templates", "youtube", "social"],
   IA:        ["ai", "automation"],
-  Gratis:    [],   // handled by type
+  Gratis:    [],
   Plugins:   [],
+};
+
+const thumbnailEmojis: Record<string, string> = {
+  luts:      "🎞️",
+  audio:     "🎵",
+  ai:        "🤖",
+  motion:    "✨",
+  templates: "🗂️",
+  photo:     "📷",
+  fonts:     "🔤",
+  color:     "🎨",
+  stock:     "🖼️",
+  plugins:   "🔌",
+  tutorials: "📚",
 };
 
 // ─── Search Modal ────────────────────────────────────────────────────────────
@@ -145,7 +159,7 @@ function SearchModal({
                         className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/5 transition-all duration-150 group text-left"
                       >
                         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-600/20 to-pink-600/20 border border-violet-500/10 flex items-center justify-center text-base shrink-0">
-                          {r.thumbnail === "luts" ? "🎞️" : r.thumbnail === "audio" ? "🎵" : r.thumbnail === "ai" ? "🤖" : r.thumbnail === "motion" ? "✨" : r.thumbnail === "templates" ? "🗂️" : "📷"}
+                          {thumbnailEmojis[r.thumbnail] ?? "📦"}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm text-white font-medium truncate group-hover:text-violet-300 transition-colors">
@@ -162,7 +176,6 @@ function SearchModal({
                       </button>
                     ))}
                   </div>
-                  {/* "Ver todos" footer */}
                   {query.trim() && (
                     <button
                       type="button"
@@ -217,6 +230,8 @@ function SearchModal({
   );
 }
 
+// ─── Navbar ───────────────────────────────────────────────────────────────────
+
 export default function Navbar() {
   const { isLoggedIn, session, logout: authLogout, openAuth } = useAuth();
   const { info } = useToast();
@@ -226,12 +241,13 @@ export default function Navbar() {
     info("Sesión cerrada", "Hasta pronto 👋");
   }
 
-  const [scrolled,     setScrolled]     = useState(false);
-  const [menuOpen,     setMenuOpen]     = useState(false);
-  const [searchOpen,   setSearchOpen]   = useState(false);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [profileOpen,  setProfileOpen]  = useState(false);
-  const [query,        setQuery]        = useState("");
+  const [scrolled,      setScrolled]      = useState(false);
+  const [menuOpen,      setMenuOpen]      = useState(false);
+  const [searchOpen,    setSearchOpen]    = useState(false);
+  const [userMenuOpen,  setUserMenuOpen]  = useState(false);
+  const [profileOpen,   setProfileOpen]   = useState(false);
+  const [profileTab,    setProfileTab]    = useState<"profile" | "saved">("profile");
+  const [query,         setQuery]         = useState("");
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 30);
@@ -266,6 +282,13 @@ export default function Navbar() {
     return () => window.removeEventListener("ch:open-search", handler);
   }, []);
 
+  // Listen for profile open events (e.g. from CTA)
+  useEffect(() => {
+    const handler = () => openProfile("profile");
+    window.addEventListener("ch:open-profile", handler);
+    return () => window.removeEventListener("ch:open-profile", handler);
+  }, []);
+
   // Close user menu when clicking outside
   useEffect(() => {
     if (!userMenuOpen) return;
@@ -273,6 +296,13 @@ export default function Navbar() {
     window.addEventListener("click", onClickOutside);
     return () => window.removeEventListener("click", onClickOutside);
   }, [userMenuOpen]);
+
+  function openProfile(tab: "profile" | "saved" = "profile") {
+    setProfileTab(tab);
+    setProfileOpen(true);
+    setUserMenuOpen(false);
+    setMenuOpen(false);
+  }
 
   return (
     <>
@@ -284,12 +314,12 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
 
           {/* Logo */}
-          <a href="#" aria-label="ContentHub — Inicio" className="flex items-center gap-2.5 shrink-0 group">
+          <a href="#" aria-label="CretivHub — Inicio" className="flex items-center gap-2.5 shrink-0 group">
             <div className="w-8 h-8 bg-gradient-to-br from-violet-600 to-pink-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
               <Zap size={15} className="text-white" />
             </div>
             <span className="font-black text-lg text-white tracking-tight hidden sm:block">
-              Content<span className="gradient-text-pp">Hub</span>
+              Cretiv<span className="gradient-text-pp">Hub</span>
             </span>
           </a>
 
@@ -327,6 +357,7 @@ export default function Navbar() {
             <button
               type="button"
               aria-label="Notificaciones"
+              onClick={() => info("Sin notificaciones nuevas", "Estás al día ✅")}
               className="relative p-2 text-[#8b949e] hover:text-white hover:bg-white/5 rounded-lg transition-all duration-200"
             >
               <Bell size={17} />
@@ -397,10 +428,10 @@ export default function Navbar() {
                     {/* Menu items */}
                     <div className="py-1">
                       {[
-                        { label: "Mi perfil",      icon: "👤", action: () => { setUserMenuOpen(false); setProfileOpen(true); } },
-                        { label: "Mis guardados",  icon: "❤️", action: () => { setUserMenuOpen(false); setProfileOpen(true); } },
-                        { label: "Mis colecciones",icon: "📁", action: () => {} },
-                        { label: "Configuración",  icon: "⚙️", action: () => {} },
+                        { label: "Mi perfil",       icon: "👤", action: () => openProfile("profile") },
+                        { label: "Mis guardados",   icon: "❤️", action: () => openProfile("saved")   },
+                        { label: "Mis colecciones", icon: "📁", action: () => openProfile("saved")   },
+                        { label: "Configuración",   icon: "⚙️", action: () => { setUserMenuOpen(false); info("Configuración", "Las opciones avanzadas estarán disponibles próximamente."); } },
                       ].map((item) => (
                         <button
                           key={item.label}
@@ -446,15 +477,16 @@ export default function Navbar() {
         {/* Mobile menu */}
         {menuOpen && (
           <div className="md:hidden glass-dark border-t border-[#30363d]/50 px-4 py-3 space-y-1">
-            <div className="flex items-center gap-2 px-3 py-2 bg-[#0d1117] border border-[#30363d] rounded-lg mb-3">
+            {/* Mobile search — tap to open modal */}
+            <button
+              type="button"
+              onClick={() => { setMenuOpen(false); setSearchOpen(true); }}
+              className="w-full flex items-center gap-2 px-3 py-2 bg-[#0d1117] border border-[#30363d] rounded-lg mb-3 text-left"
+            >
               <Search size={13} className="text-[#6e7681]" />
-              <input
-                type="text"
-                placeholder="Buscar recursos..."
-                aria-label="Buscar recursos"
-                className="flex-1 bg-transparent text-sm text-white placeholder-[#6e7681] outline-none"
-              />
-            </div>
+              <span className="text-sm text-[#6e7681]">Buscar recursos...</span>
+            </button>
+
             {navLinks.map((link) => (
               <a
                 key={link.label}
@@ -467,14 +499,23 @@ export default function Navbar() {
             ))}
             <div className="pt-2 border-t border-[#30363d]/50 grid grid-cols-2 gap-2">
               {isLoggedIn ? (
-                <button
-                  type="button"
-                  onClick={logout}
-                  className="col-span-2 py-2 text-sm text-red-400 border border-red-500/20 rounded-lg hover:bg-red-500/5 transition-all duration-200 flex items-center justify-center gap-2"
-                >
-                  <LogOut size={13} />
-                  Cerrar sesión
-                </button>
+                <>
+                  <button
+                    type="button"
+                    onClick={() => openProfile("profile")}
+                    className="py-2 text-sm text-[#8b949e] border border-[#30363d] rounded-lg hover:text-white transition-all duration-200"
+                  >
+                    Mi perfil
+                  </button>
+                  <button
+                    type="button"
+                    onClick={logout}
+                    className="py-2 text-sm text-red-400 border border-red-500/20 rounded-lg hover:bg-red-500/5 transition-all duration-200 flex items-center justify-center gap-2"
+                  >
+                    <LogOut size={13} />
+                    Salir
+                  </button>
+                </>
               ) : (
                 <>
                   <button
@@ -504,7 +545,11 @@ export default function Navbar() {
       )}
 
       {/* Profile modal */}
-      <UserProfileModal open={profileOpen} onClose={() => setProfileOpen(false)} />
+      <UserProfileModal
+        open={profileOpen}
+        onClose={() => setProfileOpen(false)}
+        defaultTab={profileTab}
+      />
     </>
   );
 }

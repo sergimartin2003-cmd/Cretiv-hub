@@ -345,7 +345,7 @@ function RegisterForm() {
 
 function LoginForm() {
   const { login, setAuthTab } = useAuth();
-  const { success, error: toastError } = useToast();
+  const { success, error: toastError, info } = useToast();
   const uid = useId();
 
   const [email,      setEmail]      = useState("");
@@ -427,7 +427,11 @@ function LoginForm() {
           />
           <span className="text-xs text-[#8b949e]">Recordarme</span>
         </label>
-        <button type="button" className="text-xs text-violet-400 hover:underline">
+        <button
+          type="button"
+          onClick={() => info("Recuperar contraseña", "Introduce tu email registrado y te enviamos instrucciones. (Funcionalidad disponible próximamente)")}
+          className="text-xs text-violet-400 hover:underline"
+        >
           ¿Olvidaste tu contraseña?
         </button>
       </div>
