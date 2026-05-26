@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
+import { lockScroll, unlockScroll } from "@/lib/scrollLock";
 import {
   register,
   login as authLogin,
@@ -107,7 +108,7 @@ function StrengthBar({ password }: { password: string }) {
 
 function RegisterForm() {
   const { login, setAuthTab } = useAuth();
-  const { success, error: toastError } = useToast();
+  const { success, error: toastError, info } = useToast();
   const uid = useId();
 
   const [name,          setName]          = useState("");
@@ -305,9 +306,9 @@ function RegisterForm() {
           />
           <span className="text-xs text-[#8b949e] leading-relaxed">
             Acepto los{" "}
-            <a href="#" className="text-violet-400 hover:underline">Términos de servicio</a>
+            <button type="button" onClick={() => info("Términos de servicio", "Disponibles próximamente en cretivhub.dev/terms")} className="text-violet-400 hover:underline">Términos de servicio</button>
             {" "}y la{" "}
-            <a href="#" className="text-violet-400 hover:underline">Política de privacidad</a>
+            <button type="button" onClick={() => info("Política de privacidad", "Disponibles próximamente en cretivhub.dev/privacy")} className="text-violet-400 hover:underline">Política de privacidad</button>
           </span>
         </label>
         {errors.terms && (
@@ -474,8 +475,9 @@ export default function AuthModal() {
 
   // Lock body scroll
   useEffect(() => {
-    document.body.style.overflow = authOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    if (authOpen) lockScroll();
+    else unlockScroll();
+    return () => unlockScroll();
   }, [authOpen]);
 
   if (!authOpen) return null;
@@ -485,7 +487,7 @@ export default function AuthModal() {
       role="dialog"
       aria-modal="true"
       aria-label={authTab === "login" ? "Iniciar sesión" : "Crear cuenta"}
-      className="fixed inset-0 z-[70] flex items-center justify-center px-4 py-6"
+      className="fixed inset-0 z-[73] flex items-center justify-center px-4 py-6"
       onClick={closeAuth}
     >
       {/* Backdrop */}

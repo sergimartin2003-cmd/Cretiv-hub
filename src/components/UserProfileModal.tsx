@@ -3,13 +3,15 @@
 import { useEffect, useState } from "react";
 import {
   X, User as UserIcon, AtSign, Mail, Calendar, LogOut,
-  Heart, Settings, Star, Download, Check, Pencil,
+  Heart, Star, Download, Check, Pencil,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { creatorTypeLabels, getSavedResources, getDownloadCount, getUsers, hashPassword } from "@/lib/auth";
 import { resources } from "@/lib/data";
 import { formatNumber } from "@/lib/utils";
+import { lockScroll, unlockScroll } from "@/lib/scrollLock";
+import { thumbnailEmojis } from "@/components/ResourceDetailModal";
 
 interface Props {
   open: boolean;
@@ -27,19 +29,7 @@ const creatorEmoji: Record<string, string> = {
   other:        "✨",
 };
 
-const thumbnailEmoji: Record<string, string> = {
-  luts:      "🎞️",
-  audio:     "🎵",
-  ai:        "🤖",
-  motion:    "✨",
-  templates: "🗂️",
-  photo:     "📷",
-  fonts:     "🔤",
-  color:     "🎨",
-  stock:     "🖼️",
-  plugins:   "🔌",
-  tutorials: "📚",
-};
+// thumbnailEmojis imported from ResourceDetailModal (single source of truth)
 
 export default function UserProfileModal({ open, onClose, defaultTab = "profile" }: Props) {
   const { session, logout: authLogout, refreshSession } = useAuth();
@@ -71,10 +61,10 @@ export default function UserProfileModal({ open, onClose, defaultTab = "profile"
     if (!open) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { if (editing) setEditing(false); else onClose(); } };
     window.addEventListener("keydown", onKey);
-    document.body.style.overflow = "hidden";
+    lockScroll();
     return () => {
       window.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
+      unlockScroll();
     };
   }, [open, onClose, editing]);
 
@@ -127,7 +117,7 @@ export default function UserProfileModal({ open, onClose, defaultTab = "profile"
       role="dialog"
       aria-modal="true"
       aria-label="Perfil de usuario"
-      className="fixed inset-0 z-[70] flex items-center justify-center px-4 py-8"
+      className="fixed inset-0 z-[71] flex items-center justify-center px-4 py-8"
       onClick={onClose}
     >
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
@@ -327,7 +317,7 @@ export default function UserProfileModal({ open, onClose, defaultTab = "profile"
                       className="flex items-center gap-3 px-4 py-3 bg-[#161b22] rounded-xl border border-[#30363d] hover:border-violet-500/25 transition-all duration-200 group"
                     >
                       <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-violet-600/20 to-pink-600/20 border border-violet-500/10 flex items-center justify-center text-lg shrink-0">
-                        {thumbnailEmoji[r.thumbnail] ?? "📦"}
+                        {thumbnailEmojis[r.thumbnail] ?? "📦"}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-white font-medium truncate group-hover:text-violet-300 transition-colors">

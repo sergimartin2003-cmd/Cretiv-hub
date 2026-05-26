@@ -5,6 +5,7 @@ import { X, CheckCircle, Download, Heart, Share2 } from "lucide-react";
 import { Resource } from "@/lib/data";
 import { formatNumber } from "@/lib/utils";
 import { useToast } from "@/context/ToastContext";
+import { lockScroll, unlockScroll } from "@/lib/scrollLock";
 
 // ─── Lookup tables (kept in sync with ResourceCard) ──────────────────────────
 
@@ -76,10 +77,10 @@ export default function ResourceDetailModal({
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", onKey);
-    document.body.style.overflow = "hidden";
+    lockScroll();
     return () => {
       window.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
+      unlockScroll();
     };
   }, [onClose]);
 

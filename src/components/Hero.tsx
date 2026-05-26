@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowRight, Star, Users, Package, Sparkles, Play, Search, X, Zap, Shield, Globe } from "lucide-react";
 import { formatNumber } from "@/lib/utils";
+import { lockScroll, unlockScroll } from "@/lib/scrollLock";
 
 const popularSearches = ["Cinematic LUTs", "Lofi music", "Motion templates", "AI tools", "Lightroom presets"];
 const words = ["Vídeo", "Diseño", "Audio", "Motion", "Fotografía", "Contenido"];
@@ -87,8 +88,8 @@ function DemoModal({ onClose }: { onClose: () => void }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", onKey);
-    document.body.style.overflow = "hidden";
-    return () => { window.removeEventListener("keydown", onKey); document.body.style.overflow = ""; };
+    lockScroll();
+    return () => { window.removeEventListener("keydown", onKey); unlockScroll(); };
   }, [onClose]);
 
   return (

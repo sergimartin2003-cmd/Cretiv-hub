@@ -23,8 +23,8 @@ const coverEmojis: Record<string, string> = {
   branding:     "🎨",
 };
 
-function scrollToCollections() {
-  const el = document.getElementById("collections");
+function scrollToExplore() {
+  const el = document.getElementById("explore");
   if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 80, behavior: "smooth" });
 }
 
@@ -43,7 +43,7 @@ export default function Collections() {
           </div>
           <button
             type="button"
-            onClick={scrollToCollections}
+            onClick={scrollToExplore}
             className="hidden md:flex items-center gap-1.5 text-sm text-violet-400 hover:text-violet-300 transition-colors duration-200 font-medium"
           >
             Ver todas <ArrowRight size={14} />

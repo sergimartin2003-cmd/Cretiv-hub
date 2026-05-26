@@ -5,7 +5,7 @@ import { ToastProvider } from "@/context/ToastContext";
 import AuthModal from "@/components/AuthModal";
 
 export const metadata: Metadata = {
-  title: "ContentHub — Recursos para Creadores de Contenido",
+  title: "CretivHub — Recursos para Creadores de Contenido",
   description: "La plataforma definitiva de recursos para creadores de contenido. Templates, LUTs, música, efectos, herramientas de IA y mucho más.",
 };
 

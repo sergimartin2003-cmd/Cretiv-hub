@@ -185,7 +185,7 @@ function SearchModal({
                       }}
                       className="mt-3 w-full flex items-center justify-center gap-1.5 py-2.5 text-xs font-semibold text-violet-400 hover:text-violet-300 border border-violet-500/20 hover:border-violet-500/40 rounded-xl hover:bg-violet-600/5 transition-all duration-200"
                     >
-                      Ver los {results.length} resultados en Explorar
+                      Ver {results.length === 1 ? "el" : "los"} {results.length} resultado{results.length !== 1 ? "s" : ""} en Explorar
                       <ArrowRight size={12} />
                     </button>
                   )}
