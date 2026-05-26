@@ -18,9 +18,9 @@ const navLinks = [
 
 const quickSearches = [
   "Cinematic LUTs",
-  "After Effects presets",
-  "Lofi music",
-  "Thumbnail templates",
+  "Sound FX Mega Pack",
+  "Midjourney prompts",
+  "UI Kit dark mode",
 ];
 
 const filterChips = ["Video", "Audio", "Templates", "IA", "Gratis", "Plugins"];
@@ -50,6 +50,20 @@ const thumbnailEmojis: Record<string, string> = {
 
 // ─── Search Modal ────────────────────────────────────────────────────────────
 
+const RECENT_KEY = "ch_recent_searches";
+
+function saveRecentSearch(q: string) {
+  try {
+    const prev: string[] = JSON.parse(localStorage.getItem(RECENT_KEY) ?? "[]");
+    const next = [q, ...prev.filter((s) => s !== q)].slice(0, 5);
+    localStorage.setItem(RECENT_KEY, JSON.stringify(next));
+  } catch {}
+}
+
+function getRecentSearches(): string[] {
+  try { return JSON.parse(localStorage.getItem(RECENT_KEY) ?? "[]"); } catch { return []; }
+}
+
 function SearchModal({
   query, setQuery, onClose,
 }: {
@@ -57,7 +71,10 @@ function SearchModal({
   setQuery: (q: string) => void;
   onClose: () => void;
 }) {
-  const [activeChip, setActiveChip] = useState<string | null>(null);
+  const [activeChip,   setActiveChip]   = useState<string | null>(null);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+
+  useEffect(() => { setRecentSearches(getRecentSearches()); }, []);
 
   const results = resources.filter((r) => {
     const q = query.toLowerCase().trim();
@@ -79,6 +96,24 @@ function SearchModal({
   }).slice(0, 6);
 
   const showResults = query.trim().length > 0 || activeChip !== null;
+
+  function handleResultClick(resourceId: string) {
+    if (query.trim()) {
+      saveRecentSearch(query.trim());
+      setRecentSearches(getRecentSearches());
+    }
+    window.dispatchEvent(new CustomEvent("ch:search", { detail: { resourceId } }));
+    onClose();
+  }
+
+  function handleViewAll() {
+    if (query.trim()) {
+      saveRecentSearch(query.trim());
+      setRecentSearches(getRecentSearches());
+    }
+    window.dispatchEvent(new CustomEvent("ch:search", { detail: { query: query.trim() } }));
+    onClose();
+  }
 
   return (
     <div
@@ -152,10 +187,7 @@ function SearchModal({
                       <button
                         key={r.id}
                         type="button"
-                        onClick={() => {
-                          window.dispatchEvent(new CustomEvent("ch:search", { detail: { resourceId: r.id } }));
-                          onClose();
-                        }}
+                        onClick={() => handleResultClick(r.id)}
                         className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/5 transition-all duration-150 group text-left"
                       >
                         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-600/20 to-pink-600/20 border border-violet-500/10 flex items-center justify-center text-base shrink-0">
@@ -179,10 +211,7 @@ function SearchModal({
                   {query.trim() && (
                     <button
                       type="button"
-                      onClick={() => {
-                        window.dispatchEvent(new CustomEvent("ch:search", { detail: { query: query.trim() } }));
-                        onClose();
-                      }}
+                      onClick={handleViewAll}
                       className="mt-3 w-full flex items-center justify-center gap-1.5 py-2.5 text-xs font-semibold text-violet-400 hover:text-violet-300 border border-violet-500/20 hover:border-violet-500/40 rounded-xl hover:bg-violet-600/5 transition-all duration-200"
                     >
                       Ver {results.length === 1 ? "el" : "los"} {results.length} resultado{results.length !== 1 ? "s" : ""} en Explorar
@@ -207,20 +236,54 @@ function SearchModal({
               )}
             </div>
           ) : (
-            <div className="px-4 py-3">
-              <p className="text-xs text-[#6e7681] mb-2 uppercase tracking-wider font-medium">Búsquedas populares</p>
-              <div className="space-y-1">
-                {quickSearches.map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => setQuery(s)}
-                    className="w-full text-left flex items-center gap-3 px-3 py-2 text-sm text-[#8b949e] hover:text-white hover:bg-white/5 rounded-lg transition-all duration-200"
-                  >
-                    <Search size={12} className="text-[#6e7681]" />
-                    {s}
-                  </button>
-                ))}
+            <div className="px-4 py-3 space-y-4">
+              {/* Recent searches */}
+              {recentSearches.length > 0 && (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs text-[#6e7681] uppercase tracking-wider font-medium">Búsquedas recientes</p>
+                    <button
+                      type="button"
+                      onClick={() => { localStorage.removeItem(RECENT_KEY); setRecentSearches([]); }}
+                      className="text-[10px] text-[#6e7681] hover:text-red-400 transition-colors"
+                    >
+                      Limpiar
+                    </button>
+                  </div>
+                  <div className="space-y-1">
+                    {recentSearches.map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => setQuery(s)}
+                        className="w-full text-left flex items-center gap-3 px-3 py-2 text-sm text-[#8b949e] hover:text-white hover:bg-white/5 rounded-lg transition-all duration-200"
+                      >
+                        <Search size={12} className="text-[#6e7681]" />
+                        <span className="flex-1 truncate">{s}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Popular searches */}
+              <div>
+                <p className="text-xs text-[#6e7681] mb-2 uppercase tracking-wider font-medium">
+                  {recentSearches.length > 0 ? "Populares" : "Búsquedas populares"}
+                </p>
+                <div className="space-y-1">
+                  {quickSearches.map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => setQuery(s)}
+                      className="w-full text-left flex items-center gap-3 px-3 py-2 text-sm text-[#8b949e] hover:text-white hover:bg-white/5 rounded-lg transition-all duration-200"
+                    >
+                      <Search size={12} className="text-[#6e7681]" />
+                      {s}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           )}

@@ -205,8 +205,8 @@ export default function Trending() {
               </h3>
               <dl className="space-y-3">
                 {[
-                  { label: "Recursos disponibles",   value: "30+",    color: "text-green-400"  },
-                  { label: "Descargas totales",       value: "1.8M+",  color: "text-violet-400" },
+                  { label: "Recursos disponibles",   value: "30",     color: "text-green-400"  },
+                  { label: "Descargas totales",       value: "2.8M+",  color: "text-violet-400" },
                   { label: "Creadores activos",       value: "+58K",   color: "text-cyan-400"   },
                   { label: "Colecciones curadas",     value: "6",      color: "text-pink-400"   },
                 ].map((s) => (

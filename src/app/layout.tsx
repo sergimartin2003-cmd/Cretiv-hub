@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { ToastProvider } from "@/context/ToastContext";
@@ -19,6 +19,10 @@ export const metadata: Metadata = {
     description: "Miles de recursos premium para llevar tu contenido al siguiente nivel.",
   },
   robots: { index: true, follow: true },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0d1117",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

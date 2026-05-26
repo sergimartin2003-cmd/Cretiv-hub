@@ -5,7 +5,7 @@ import { ArrowRight, Star, Users, Package, Sparkles, Play, Search, X, Zap, Shiel
 import { formatNumber } from "@/lib/utils";
 import { lockScroll, unlockScroll } from "@/lib/scrollLock";
 
-const popularSearches = ["Cinematic LUTs", "Lofi music", "Motion templates", "AI tools", "Lightroom presets"];
+const popularSearches = ["Cinematic LUTs", "Sound FX", "Motion templates", "Midjourney prompts", "UI Kit"];
 const words = ["Vídeo", "Diseño", "Audio", "Motion", "Fotografía", "Contenido"];
 const stats = [
   { label: "Recursos",  value: 12000, icon: Package },
