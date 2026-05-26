@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { X, CheckCircle, Download, Heart, Share2 } from "lucide-react";
+import { X, CheckCircle, Download, Heart, Share2, Flame, Sparkles } from "lucide-react";
 import { Resource } from "@/lib/data";
 import { formatNumber } from "@/lib/utils";
 import { useToast } from "@/context/ToastContext";
@@ -38,8 +38,6 @@ export const thumbnailEmojis: Record<string, string> = {
 };
 
 // ─── Badge helpers ────────────────────────────────────────────────────────────
-
-import { Flame, Sparkles } from "lucide-react";
 
 function Badge({ type }: { type: "trending" | "new" | "official" }) {
   const styles = {
