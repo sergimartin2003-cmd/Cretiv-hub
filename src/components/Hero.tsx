@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight, Star, Users, Package, Sparkles, Play } from "lucide-react";
+import { ArrowRight, Star, Users, Package, Sparkles, Play, Search } from "lucide-react";
 import { formatNumber } from "@/lib/utils";
+
+const popularSearches = ["Cinematic LUTs", "Lofi music", "Motion templates", "AI tools", "Lightroom presets"];
 
 const words = ["Vídeo", "Diseño", "Audio", "Motion", "Fotografía", "Contenido"];
 
@@ -100,18 +102,54 @@ export default function Hero() {
           organizados para llevar tu contenido al siguiente nivel.
         </p>
 
+        {/* ── Hero Search Bar ── */}
+        <div className="w-full max-w-2xl mx-auto mb-6">
+          <button
+            type="button"
+            aria-label="Abrir buscador"
+            onClick={() => window.dispatchEvent(new CustomEvent("ch:open-search"))}
+            className="w-full flex items-center gap-3 px-5 py-4 glass border border-[#30363d] rounded-2xl hover:border-violet-500/50 transition-all duration-300 group shadow-xl text-left"
+          >
+            <div className="w-9 h-9 bg-gradient-to-br from-violet-600/20 to-pink-600/20 border border-violet-500/20 rounded-xl flex items-center justify-center shrink-0 group-hover:from-violet-600/30 group-hover:to-pink-600/30 transition-all duration-300">
+              <Search size={16} className="text-violet-400" />
+            </div>
+            <span className="flex-1 text-[#6e7681] text-base group-hover:text-[#8b949e] transition-colors duration-200">
+              Busca recursos, templates, música, LUTs...
+            </span>
+            <div className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 bg-[#0d1117] rounded-lg border border-[#30363d] text-[11px] text-[#6e7681] font-mono shrink-0">
+              Ctrl K
+            </div>
+          </button>
+
+          {/* Popular tags */}
+          <div className="flex items-center gap-2 mt-3 flex-wrap justify-center">
+            <span className="text-xs text-[#6e7681]">Popular:</span>
+            {popularSearches.map((term) => (
+              <button
+                key={term}
+                type="button"
+                aria-label={`Buscar ${term}`}
+                onClick={() => window.dispatchEvent(new CustomEvent("ch:open-search", { detail: term }))}
+                className="text-xs px-3 py-1 bg-[#161b22] border border-[#30363d] rounded-full text-[#8b949e] hover:text-white hover:border-violet-500/40 hover:bg-[#1c2128] transition-all duration-200"
+              >
+                {term}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* CTAs */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+        <div className="flex flex-col sm:flex-row gap-3 justify-center mb-16">
           <a
             href="#explore"
-            className="btn-gradient inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-bold text-white rounded-xl shadow-[0_0_30px_rgba(124,58,237,0.35)]"
+            className="btn-gradient inline-flex items-center justify-center gap-2 px-7 py-3.5 text-sm font-bold text-white rounded-xl shadow-[0_0_24px_rgba(124,58,237,0.35)]"
           >
-            <Sparkles size={17} />
-            Explorar recursos
-            <ArrowRight size={17} />
+            <Sparkles size={15} />
+            Explorar todo
+            <ArrowRight size={15} />
           </a>
-          <button type="button" className="inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-semibold text-[#e6edf3] bg-[#161b22] border border-[#30363d] rounded-xl hover:border-violet-500/50 hover:bg-[#1c2128] transition-all duration-300">
-            <Play size={15} className="text-violet-400" fill="currentColor" />
+          <button type="button" className="inline-flex items-center justify-center gap-2 px-7 py-3.5 text-sm font-semibold text-[#e6edf3] bg-[#161b22] border border-[#30363d] rounded-xl hover:border-violet-500/50 hover:bg-[#1c2128] transition-all duration-300">
+            <Play size={14} className="text-violet-400" fill="currentColor" />
             Ver demo
           </button>
         </div>
