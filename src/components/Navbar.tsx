@@ -10,10 +10,10 @@ import { formatNumber } from "@/lib/utils";
 import UserProfileModal from "@/components/UserProfileModal";
 
 const navLinks = [
-  { label: "Explorar",    href: "#explore"     },
-  { label: "Colecciones", href: "#collections" },
-  { label: "Trending",    href: "#trending"    },
-  { label: "Comunidad",   href: "#"            },
+  { label: "Explorar",    href: "#explore",     section: "explore"     },
+  { label: "Colecciones", href: "#collections", section: "collections" },
+  { label: "Trending",    href: "#trending",    section: "trending"    },
+  { label: "Comunidad",   href: "#trending",    section: "trending"    },
 ];
 
 const quickSearches = [
@@ -248,9 +248,23 @@ export default function Navbar() {
   const [profileOpen,   setProfileOpen]   = useState(false);
   const [profileTab,    setProfileTab]    = useState<"profile" | "saved">("profile");
   const [query,         setQuery]         = useState("");
+  const [activeSection, setActiveSection] = useState<string>("");
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 30);
+    const sectionIds = ["explore", "collections", "trending"];
+    const onScroll = () => {
+      setScrolled(window.scrollY > 30);
+      // Determine active section
+      let found = "";
+      for (const id of sectionIds) {
+        const el = document.getElementById(id);
+        if (el) {
+          const { top, bottom } = el.getBoundingClientRect();
+          if (top <= 120 && bottom > 120) { found = id; break; }
+        }
+      }
+      setActiveSection(found);
+    };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
@@ -325,15 +339,22 @@ export default function Navbar() {
 
           {/* Nav links */}
           <div className="hidden md:flex items-center gap-1 flex-1 justify-center">
-            {navLinks.map((link) => (
-              <a
-                key={link.label}
-                href={link.href}
-                className="px-3 py-2 text-sm text-[#8b949e] hover:text-white rounded-lg hover:bg-white/5 transition-all duration-200 font-medium whitespace-nowrap"
-              >
-                {link.label}
-              </a>
-            ))}
+            {navLinks.map((link) => {
+              const isActive = activeSection === link.section;
+              return (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  className={`px-3 py-2 text-sm rounded-lg transition-all duration-200 font-medium whitespace-nowrap ${
+                    isActive
+                      ? "text-white bg-white/8 border-b-2 border-violet-500"
+                      : "text-[#8b949e] hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  {link.label}
+                </a>
+              );
+            })}
           </div>
 
           {/* Right */}

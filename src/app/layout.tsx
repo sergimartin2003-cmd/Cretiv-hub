@@ -7,6 +7,18 @@ import AuthModal from "@/components/AuthModal";
 export const metadata: Metadata = {
   title: "CretivHub — Recursos para Creadores de Contenido",
   description: "La plataforma definitiva de recursos para creadores de contenido. Templates, LUTs, música, efectos, herramientas de IA y mucho más.",
+  openGraph: {
+    title: "CretivHub — Recursos para Creadores de Contenido",
+    description: "Miles de recursos premium para llevar tu contenido al siguiente nivel.",
+    type: "website",
+    locale: "es_ES",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "CretivHub — Recursos para Creadores",
+    description: "Miles de recursos premium para llevar tu contenido al siguiente nivel.",
+  },
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

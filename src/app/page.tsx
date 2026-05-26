@@ -7,11 +7,13 @@ import Trending from "@/components/Trending";
 import CTA from "@/components/CTA";
 import Footer from "@/components/Footer";
 import ProgressBar from "@/components/ProgressBar";
+import BackToTop from "@/components/BackToTop";
 
 export default function Home() {
   return (
     <main className="min-h-screen bg-[#0d1117] relative">
       <ProgressBar />
+      <BackToTop />
       <Navbar />
       <Hero />
       <div className="section-divider my-0" />
