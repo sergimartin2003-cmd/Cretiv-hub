@@ -1,7 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
-import { X, CheckCircle, Download, Heart, Share2, Flame, Sparkles, Star, ArrowDownToLine } from "lucide-react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+import {
+  X, CheckCircle, Download, Heart, Share2,
+  Flame, Sparkles, Star, ArrowDownToLine,
+} from "lucide-react";
 import { Resource } from "@/lib/data";
 import { formatNumber } from "@/lib/utils";
 import { useToast } from "@/context/ToastContext";
@@ -68,11 +72,13 @@ export default function ResourceDetailModal({
   resource, saved, saveCount, onClose, onSave, onDownload,
 }: ResourceDetailModalProps) {
   const { success } = useToast();
+  const [mounted, setMounted] = useState(false);
 
   const grad  = thumbnailGradients[resource.thumbnail] ?? "from-violet-600 via-purple-500 to-pink-600";
   const emoji = thumbnailEmojis[resource.thumbnail]    ?? "📦";
 
   useEffect(() => {
+    setMounted(true);
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", onKey);
     lockScroll();
@@ -83,9 +89,8 @@ export default function ResourceDetailModal({
   }, [onClose]);
 
   function handleShare() {
-    const text = `${resource.title} — CretivHub`;
     if (navigator.share) {
-      navigator.share({ title: text, url: window.location.href }).catch(() => {});
+      navigator.share({ title: `${resource.title} — CretivHub`, url: window.location.href }).catch(() => {});
     } else {
       navigator.clipboard.writeText(window.location.href).then(() =>
         success("Enlace copiado 🔗", "Pega el enlace donde quieras compartirlo.")
@@ -93,75 +98,89 @@ export default function ResourceDetailModal({
     }
   }
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
       aria-label={`Detalle: ${resource.title}`}
-      className="fixed inset-0 z-[80] flex items-center justify-center px-4 py-6"
+      className="fixed inset-0 z-[80] flex items-center justify-center p-4"
       onClick={onClose}
     >
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/80 backdrop-blur-md" />
 
-      {/* Panel — two-column layout */}
+      {/* Card — always horizontal split */}
       <div
-        className="relative w-full max-w-2xl rounded-3xl overflow-hidden shadow-2xl flex flex-col sm:flex-row"
-        style={{ maxHeight: "min(88vh, 640px)" }}
+        className="relative z-10 flex rounded-3xl overflow-hidden shadow-2xl border border-white/10"
+        style={{ width: "min(680px, calc(100vw - 2rem))", maxHeight: "min(560px, calc(100vh - 3rem))" }}
         onClick={(e) => e.stopPropagation()}
       >
 
-        {/* ── Left: visual hero ── */}
+        {/* ── LEFT: gradient hero ── */}
         <div
-          className={`relative sm:w-60 shrink-0 h-52 sm:h-auto bg-gradient-to-br ${grad} flex flex-col items-center justify-center overflow-hidden`}
+          className={`relative flex-none bg-gradient-to-br ${grad} flex flex-col items-center justify-center overflow-hidden`}
+          style={{ width: "220px" }}
         >
           {/* grid texture */}
-          <div className="absolute inset-0 grid-pattern opacity-20" />
+          <div className="absolute inset-0 grid-pattern opacity-25" />
 
-          {/* glow blob */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="w-44 h-44 rounded-full blur-3xl opacity-40 bg-white/20" />
+          {/* glow */}
+          <div
+            className="absolute inset-0 flex items-center justify-center pointer-events-none"
+            aria-hidden="true"
+          >
+            <div className="w-40 h-40 rounded-full blur-3xl opacity-50 bg-white/25" />
           </div>
 
-          {/* dark gradient bottom */}
+          {/* bottom fade */}
           <div className="absolute bottom-0 inset-x-0 h-24 bg-gradient-to-t from-black/50 to-transparent" />
 
-          {/* emoji */}
-          <span className="text-[80px] sm:text-[96px] relative z-10 drop-shadow-2xl select-none leading-none" aria-hidden="true">
+          {/* big emoji */}
+          <span
+            className="relative z-10 select-none drop-shadow-2xl"
+            style={{ fontSize: "88px", lineHeight: 1 }}
+            aria-hidden="true"
+          >
             {emoji}
           </span>
 
-          {/* badges */}
-          <div className="absolute top-4 left-4 flex flex-col gap-2 z-20">
+          {/* badge */}
+          <div className="absolute top-4 left-4 flex flex-col gap-1.5 z-20">
             {resource.badge && <Badge type={resource.badge} />}
           </div>
 
-          {/* type tag */}
+          {/* type */}
           <div className="absolute bottom-4 left-4 z-20">
-            <span className={`tag text-xs px-3 py-1 ${resource.type === "free" ? "tag-free" : "tag-premium"}`}>
-              {resource.type === "free" ? "✦ Gratis" : "⭐ Premium"}
+            <span className={`tag text-xs px-2.5 py-1 ${resource.type === "free" ? "tag-free" : "tag-premium"}`}>
+              {resource.type === "free" ? "Gratis" : "Premium"}
             </span>
           </div>
 
-          {/* downloads watermark */}
-          <div className="absolute bottom-4 right-4 z-20 flex items-center gap-1 text-white/60 text-xs font-medium">
-            <ArrowDownToLine size={11} />
+          {/* downloads */}
+          <div className="absolute bottom-4 right-3 z-20 flex items-center gap-1 text-white/60 text-xs font-medium">
+            <ArrowDownToLine size={10} />
             {formatNumber(resource.downloads)}
           </div>
         </div>
 
-        {/* ── Right: info panel ── */}
-        <div className="flex-1 bg-[#0d1117] flex flex-col min-h-0">
-
+        {/* ── RIGHT: info panel ── */}
+        <div
+          className="flex flex-col min-w-0"
+          style={{ flex: 1, backgroundColor: "#0d1117" }}
+        >
           {/* Header */}
-          <div className="flex items-start justify-between px-6 pt-6 pb-3 shrink-0">
-            <div className="flex-1 min-w-0 pr-4">
-              <h2 className="text-xl font-black text-white leading-tight mb-1">
+          <div className="flex items-start justify-between px-5 pt-5 pb-3 flex-shrink-0">
+            <div className="flex-1 min-w-0 pr-3">
+              <h2 className="text-lg font-black text-white leading-tight mb-1 truncate">
                 {resource.title}
               </h2>
-              <p className="text-xs text-[#6e7681]">
+              <p className="text-xs" style={{ color: "#6e7681" }}>
                 por{" "}
-                <span className="text-violet-400 font-medium">{resource.author.name}</span>
+                <span className="font-medium" style={{ color: "#a78bfa" }}>
+                  {resource.author.name}
+                </span>
                 {resource.author.verified && (
                   <CheckCircle size={11} className="inline ml-1 text-violet-400" aria-label="Verificado" />
                 )}
@@ -171,78 +190,86 @@ export default function ResourceDetailModal({
               type="button"
               onClick={onClose}
               aria-label="Cerrar"
-              className="p-2 bg-white/5 hover:bg-white/10 rounded-xl text-[#8b949e] hover:text-white transition-all shrink-0"
+              className="flex-shrink-0 p-1.5 rounded-xl text-white/40 hover:text-white hover:bg-white/10 transition-all"
             >
               <X size={16} />
             </button>
           </div>
 
           {/* Tags */}
-          <div className="px-6 pb-3 flex gap-1.5 flex-wrap shrink-0">
+          <div className="px-5 pb-3 flex gap-1.5 flex-wrap flex-shrink-0">
             {resource.tags.map((tag) => (
               <span key={tag} className={`tag tag-${tag}`}>{tag}</span>
             ))}
           </div>
 
           {/* Scrollable body */}
-          <div className="flex-1 overflow-y-auto px-6 pb-4 space-y-4 min-h-0">
+          <div className="flex-1 overflow-y-auto px-5 pb-4 space-y-4" style={{ minHeight: 0 }}>
 
             {/* Description */}
-            <p className="text-[#8b949e] text-sm leading-relaxed">
+            <p className="text-sm leading-relaxed" style={{ color: "#8b949e" }}>
               {resource.description}
             </p>
 
             {/* Stats */}
-            <div className="grid grid-cols-3 gap-2.5">
+            <div className="grid grid-cols-3 gap-2">
               {[
-                { label: "Valoración", value: `${resource.stars}★`, cls: "text-yellow-400", bg: "bg-yellow-500/8" },
-                { label: "Guardados",  value: formatNumber(saveCount), cls: "text-pink-400",   bg: "bg-pink-500/8"   },
-                { label: "Descargas",  value: formatNumber(resource.downloads), cls: "text-violet-400", bg: "bg-violet-500/8" },
-              ].map(({ label, value, cls, bg }) => (
-                <div key={label} className={`${bg} border border-white/5 rounded-xl p-3 text-center`}>
-                  <div className={`text-base font-black ${cls}`}>{value}</div>
-                  <div className="text-[10px] text-[#6e7681] mt-0.5 leading-tight">{label}</div>
+                { label: "Valoración", value: `${resource.stars}★`, color: "#facc15", bg: "rgba(250,204,21,0.08)" },
+                { label: "Guardados",  value: formatNumber(saveCount),              color: "#f472b6", bg: "rgba(244,114,182,0.08)" },
+                { label: "Descargas",  value: formatNumber(resource.downloads),     color: "#a78bfa", bg: "rgba(167,139,250,0.08)" },
+              ].map(({ label, value, color, bg }) => (
+                <div
+                  key={label}
+                  className="rounded-xl p-3 text-center border border-white/5"
+                  style={{ backgroundColor: bg }}
+                >
+                  <div className="text-sm font-black" style={{ color }}>{value}</div>
+                  <div className="text-[10px] mt-0.5" style={{ color: "#6e7681" }}>{label}</div>
                 </div>
               ))}
             </div>
 
-            {/* Rating stars visual */}
+            {/* Stars visual */}
             <div className="flex items-center gap-2">
               <div className="flex gap-0.5">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <Star
                     key={i}
-                    size={13}
-                    className={i < Math.round(resource.stars) ? "text-yellow-400 fill-yellow-400" : "text-[#30363d]"}
+                    size={12}
+                    className={i < Math.round(resource.stars) ? "text-yellow-400 fill-yellow-400" : "text-white/10 fill-white/10"}
                   />
                 ))}
               </div>
-              <span className="text-xs text-[#6e7681]">{resource.stars} de 5</span>
+              <span className="text-xs" style={{ color: "#6e7681" }}>{resource.stars} / 5</span>
             </div>
           </div>
 
           {/* Footer actions */}
-          <div className="px-6 py-4 border-t border-[#30363d] flex gap-2.5 shrink-0">
+          <div
+            className="flex-shrink-0 flex gap-2 px-5 py-4"
+            style={{ borderTop: "1px solid rgba(48,54,61,1)" }}
+          >
             <button
               type="button"
               onClick={onSave}
               aria-label={saved ? "Quitar de guardados" : "Guardar"}
-              className={`p-3 rounded-xl border transition-all duration-200 ${
-                saved
-                  ? "bg-pink-500/15 border-pink-500/40 text-pink-400"
-                  : "bg-[#161b22] border-[#30363d] text-[#8b949e] hover:border-pink-500/40 hover:text-pink-400"
-              }`}
+              className="flex-shrink-0 p-3 rounded-xl border transition-all duration-200"
+              style={saved
+                ? { backgroundColor: "rgba(236,72,153,0.15)", borderColor: "rgba(236,72,153,0.4)", color: "#f472b6" }
+                : { backgroundColor: "#161b22", borderColor: "#30363d", color: "#8b949e" }
+              }
             >
-              <Heart size={17} className={saved ? "fill-pink-400" : ""} />
+              <Heart size={16} className={saved ? "fill-pink-400" : ""} />
             </button>
 
             <button
               type="button"
               onClick={handleShare}
               aria-label="Compartir"
-              className="p-3 rounded-xl border border-[#30363d] bg-[#161b22] text-[#8b949e] hover:border-violet-500/40 hover:text-violet-400 transition-all duration-200"
+              className="flex-shrink-0 p-3 rounded-xl border transition-all duration-200"
+              style={{ backgroundColor: "#161b22", borderColor: "#30363d", color: "#8b949e" }}
             >
-              <Share2 size={17} />
+              <Share2 size={16} />
             </button>
 
             <button
@@ -256,6 +283,7 @@ export default function ResourceDetailModal({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
