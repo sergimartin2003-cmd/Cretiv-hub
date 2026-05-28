@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, Bell, Menu, X, Zap, Command, LogOut, ChevronDown, ArrowRight } from "lucide-react";
+import { Search, Bell, Menu, X, Zap, Command, LogOut, ChevronDown, ArrowRight, Upload } from "lucide-react";
+import dynamic from "next/dynamic";
+const SubmitResourceModal = dynamic(() => import("./SubmitResourceModal"), { ssr: false });
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { creatorTypeLabels } from "@/lib/auth";
@@ -296,8 +298,9 @@ function SearchModal({
 // ─── Navbar ───────────────────────────────────────────────────────────────────
 
 export default function Navbar() {
-  const { isLoggedIn, session, logout: authLogout, openAuth } = useAuth();
+  const { isLoggedIn, session, user, logout: authLogout, openAuth } = useAuth();
   const { info } = useToast();
+  const [submitOpen, setSubmitOpen] = useState(false);
 
   function logout() {
     authLogout();
@@ -446,6 +449,15 @@ export default function Navbar() {
             >
               <Bell size={17} />
               <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-violet-500 rounded-full" />
+            </button>
+
+            {/* ── Subir recurso (siempre visible) ── */}
+            <button
+              type="button"
+              onClick={() => isLoggedIn ? setSubmitOpen(true) : openAuth("register")}
+              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold text-violet-300 border border-violet-500/30 rounded-lg hover:border-violet-500/60 hover:bg-violet-500/10 transition-all duration-200 whitespace-nowrap"
+            >
+              <Upload size={13} /> Subir
             </button>
 
             {/* ── Logged out ── */}
@@ -634,6 +646,9 @@ export default function Navbar() {
         onClose={() => setProfileOpen(false)}
         defaultTab={profileTab}
       />
+
+      {/* Submit resource modal */}
+      {submitOpen && <SubmitResourceModal onClose={() => setSubmitOpen(false)} />}
     </>
   );
 }

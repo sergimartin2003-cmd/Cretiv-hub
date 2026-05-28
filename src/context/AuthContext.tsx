@@ -1,38 +1,41 @@
 "use client";
 
 import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  useCallback,
-  type ReactNode,
+  createContext, useContext, useEffect, useState, useCallback, type ReactNode,
 } from "react";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+import type { User as SbUser, Session as SbSession } from "@supabase/supabase-js";
 import {
-  type Session,
-  loadSession,
-  clearSession,
-  saveSession,
-  type User,
+  type Session as LocalSession,
+  loadSession, clearSession, saveSession, type User as LocalUser,
 } from "@/lib/auth";
 
-// ─── Context type ─────────────────────────────────────────────────────────────
+// ─── Unified session type ─────────────────────────────────────────────────────
+
+export interface AppUser {
+  id: string;
+  email: string;
+  username: string;
+  displayName: string;
+  avatar: string;
+  role: "user" | "creator" | "admin";
+  verified: boolean;
+}
 
 interface AuthContextValue {
-  session:        Session | null;
+  user:           AppUser | null;
+  session:        LocalSession | null;   // kept for backwards-compat
   isLoggedIn:     boolean;
-  login:          (user: User, rememberMe: boolean) => void;
+  isSupabase:     boolean;               // true when using real Supabase auth
+  login:          (user: LocalUser, rememberMe: boolean) => void;
   logout:         () => void;
-  refreshSession: (user: User) => void;
-  /** Open the auth modal from anywhere */
+  refreshSession: (user: LocalUser) => void;
   openAuth:       (tab?: "login" | "register") => void;
   closeAuth:      () => void;
   authOpen:       boolean;
   authTab:        "login" | "register";
   setAuthTab:     (tab: "login" | "register") => void;
 }
-
-// ─── Context ──────────────────────────────────────────────────────────────────
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
@@ -42,59 +45,115 @@ export function useAuth() {
   return ctx;
 }
 
+// ─── Helper: convert Supabase user + profile → AppUser ───────────────────────
+
+async function fetchAppUser(sbUser: SbUser): Promise<AppUser> {
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", sbUser.id)
+    .single();
+
+  return {
+    id: sbUser.id,
+    email: sbUser.email ?? "",
+    username: profile?.username ?? sbUser.email?.split("@")[0] ?? "user",
+    displayName: profile?.display_name ?? profile?.username ?? sbUser.email?.split("@")[0] ?? "User",
+    avatar: profile?.avatar ?? "U",
+    role: (profile?.role as AppUser["role"]) ?? "user",
+    verified: profile?.verified ?? false,
+  };
+}
+
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [session,  setSession]  = useState<Session | null>(null);
+  const useSb = isSupabaseConfigured();
+
+  const [user,     setUser]     = useState<AppUser | null>(null);
+  const [session,  setSession]  = useState<LocalSession | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
   const [authTab,  setAuthTab]  = useState<"login" | "register">("register");
 
-  // Hydrate from storage on mount
+  // ── Supabase auth ────────────────────────────────────────────────────────────
   useEffect(() => {
-    setSession(loadSession());
-  }, []);
+    if (!useSb) {
+      setSession(loadSession());
+      return;
+    }
 
-  const login = useCallback((user: User, rememberMe: boolean) => {
-    saveSession(user, rememberMe);
+    supabase.auth.getSession().then(({ data: { session: sb } }) => {
+      if (sb?.user) fetchAppUser(sb.user).then(setUser);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, sb) => {
+      if (sb?.user) {
+        const appUser = await fetchAppUser(sb.user);
+        setUser(appUser);
+      } else {
+        setUser(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [useSb]);
+
+  // ── LocalStorage auth (fallback) ─────────────────────────────────────────────
+  const login = useCallback((u: LocalUser, rememberMe: boolean) => {
+    if (useSb) return; // handled by Supabase
+    saveSession(u, rememberMe);
     setSession(loadSession());
     setAuthOpen(false);
-  }, []);
+  }, [useSb]);
 
-  const logout = useCallback(() => {
-    clearSession();
-    setSession(null);
-  }, []);
+  const logout = useCallback(async () => {
+    if (useSb) {
+      await supabase.auth.signOut();
+      setUser(null);
+    } else {
+      clearSession();
+      setSession(null);
+    }
+  }, [useSb]);
 
-  // Update session in-place after profile edit without logging out
-  const refreshSession = useCallback((user: User) => {
+  const refreshSession = useCallback((u: LocalUser) => {
+    if (useSb) return;
     const current = loadSession();
     if (!current) return;
-    saveSession(user, current.rememberMe);
+    saveSession(u, current.rememberMe);
     setSession(loadSession());
-  }, []);
+  }, [useSb]);
 
-  const openAuth = useCallback((tab: "login" | "register" = "register") => {
-    setAuthTab(tab);
-    setAuthOpen(true);
+  const openAuth  = useCallback((tab: "login" | "register" = "register") => {
+    setAuthTab(tab); setAuthOpen(true);
   }, []);
-
   const closeAuth = useCallback(() => setAuthOpen(false), []);
 
+  // Build backwards-compat AppUser from local session
+  const localUser: AppUser | null = session
+    ? {
+        id: session.userId,
+        email: session.email ?? "",
+        username: session.username,
+        displayName: session.username,
+        avatar: session.avatar,
+        role: "user",
+        verified: false,
+      }
+    : null;
+
+  const activeUser = useSb ? user : localUser;
+
   return (
-    <AuthContext.Provider
-      value={{
-        session,
-        isLoggedIn: !!session,
-        login,
-        logout,
-        refreshSession,
-        openAuth,
-        closeAuth,
-        authOpen,
-        authTab,
-        setAuthTab,
-      }}
-    >
+    <AuthContext.Provider value={{
+      user:      activeUser,
+      session,
+      isLoggedIn: !!activeUser,
+      isSupabase: useSb,
+      login, logout, refreshSession,
+      openAuth, closeAuth,
+      authOpen, authTab, setAuthTab,
+    }}>
       {children}
     </AuthContext.Provider>
   );

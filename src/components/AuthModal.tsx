@@ -7,6 +7,7 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { lockScroll, unlockScroll } from "@/lib/scrollLock";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import {
   register,
   login as authLogin,
@@ -107,7 +108,7 @@ function StrengthBar({ password }: { password: string }) {
 // ─── Register form ────────────────────────────────────────────────────────────
 
 function RegisterForm() {
-  const { login, setAuthTab } = useAuth();
+  const { login, setAuthTab, isSupabase, closeAuth } = useAuth();
   const { success, error: toastError, info } = useToast();
   const uid = useId();
 
@@ -154,9 +155,31 @@ function RegisterForm() {
     setErrors({});
     setLoading(true);
 
-    // Simulate network delay
-    await new Promise((r) => setTimeout(r, 700));
+    // ── Supabase auth ─────────────────────────────────────────────────────────
+    if (isSupabase) {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { username, display_name: name } },
+      });
+      setLoading(false);
+      if (error) {
+        const msg = error.message.includes("already")
+          ? "Este email ya está registrado"
+          : error.message;
+        setErrors({ email: msg });
+        toastError("No se pudo crear la cuenta", msg);
+        return;
+      }
+      setRegistered(true);
+      success("¡Bienvenido/a a CretivHub! 🎉", `Cuenta creada como @${username}`);
+      await new Promise((r) => setTimeout(r, 1200));
+      closeAuth();
+      return;
+    }
 
+    // ── LocalStorage fallback ─────────────────────────────────────────────────
+    await new Promise((r) => setTimeout(r, 700));
     const payload: RegisterPayload = {
       name, username, email, password, confirmPassword: confirmPwd, creatorType, acceptTerms,
     };
@@ -345,7 +368,7 @@ function RegisterForm() {
 // ─── Login form ───────────────────────────────────────────────────────────────
 
 function LoginForm() {
-  const { login, setAuthTab } = useAuth();
+  const { login, setAuthTab, isSupabase, closeAuth } = useAuth();
   const { success, error: toastError, info } = useToast();
   const uid = useId();
 
@@ -361,6 +384,23 @@ function LoginForm() {
     if (!email || !password) { setError("Completa todos los campos"); return; }
     setError("");
     setLoading(true);
+
+    // ── Supabase auth ─────────────────────────────────────────────────────────
+    if (isSupabase) {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      setLoading(false);
+      if (error) {
+        const msg = "Email o contraseña incorrectos";
+        setError(msg);
+        toastError("Error al iniciar sesión", msg);
+        return;
+      }
+      success("¡Bienvenido/a de nuevo! 👋");
+      closeAuth();
+      return;
+    }
+
+    // ── LocalStorage fallback ─────────────────────────────────────────────────
     await new Promise((r) => setTimeout(r, 600));
     const result = authLogin(email, password);
     setLoading(false);
