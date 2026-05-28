@@ -319,10 +319,10 @@ export default function ExploreSection() {
 
   // ── Subtitle text ───────────────────────────────────────────────────────────
   const subtitle = searchText
-    ? `${filtered.length} resultado${filtered.length !== 1 ? "s" : ""} para "${searchText}"`
+    ? `resultado${filtered.length !== 1 ? "s" : ""} para "${searchText}"`
     : activeFilter !== "Todos"
-    ? `${filtered.length} resultado${filtered.length !== 1 ? "s" : ""} en "${activeFilter}"`
-    : `${resources.length}+ recursos curados por la comunidad`;
+    ? `resultado${filtered.length !== 1 ? "s" : ""} en "${activeFilter}"`
+    : `recursos curados por la comunidad`;
 
   return (
     <section id="explore" className="py-20 px-4">

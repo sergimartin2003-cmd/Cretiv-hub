@@ -185,8 +185,10 @@ export default function Hero() {
   const [wordIndex, setWordIndex] = useState(0);
   const [visible,   setVisible]   = useState(true);
   const [demoOpen,  setDemoOpen]  = useState(false);
+  const [isMac,     setIsMac]     = useState(false);
 
   useEffect(() => {
+    setIsMac(/mac/i.test(navigator.platform));
     const interval = setInterval(() => {
       setVisible(false);
       setTimeout(() => { setWordIndex((i) => (i + 1) % words.length); setVisible(true); }, 300);
@@ -251,7 +253,7 @@ export default function Hero() {
                 Busca recursos, templates, música, LUTs...
               </span>
               <div className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 bg-[#0d1117] rounded-lg border border-[#30363d] text-[11px] text-[#6e7681] font-mono shrink-0">
-                Ctrl K
+                {isMac ? "⌘K" : "Ctrl K"}
               </div>
             </button>
 

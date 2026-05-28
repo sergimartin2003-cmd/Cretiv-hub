@@ -111,17 +111,17 @@ export default function ResourceDetailModal({
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/80 backdrop-blur-md" />
 
-      {/* Card — always horizontal split */}
+      {/* Card — horizontal split on wide screens, stacked on mobile */}
       <div
-        className="relative z-10 flex rounded-3xl overflow-hidden shadow-2xl border border-white/10"
-        style={{ width: "min(680px, calc(100vw - 2rem))", maxHeight: "min(560px, calc(100vh - 3rem))" }}
+        className="relative z-10 flex flex-col xs:flex-row rounded-3xl overflow-hidden shadow-2xl border border-white/10"
+        style={{ width: "min(680px, calc(100vw - 2rem))", maxHeight: "min(600px, calc(100vh - 3rem))" }}
         onClick={(e) => e.stopPropagation()}
       >
 
-        {/* ── LEFT: gradient hero ── */}
+        {/* ── LEFT/TOP: gradient hero ── */}
         <div
-          className={`relative flex-none bg-gradient-to-br ${grad} flex flex-col items-center justify-center overflow-hidden`}
-          style={{ width: "220px" }}
+          className={`relative bg-gradient-to-br ${grad} flex flex-col items-center justify-center overflow-hidden`}
+          style={{ flexShrink: 0, width: "clamp(140px, 30vw, 220px)", minHeight: "160px" }}
         >
           {/* grid texture */}
           <div className="absolute inset-0 grid-pattern opacity-25" />
